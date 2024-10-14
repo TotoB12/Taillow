@@ -1,1 +1,2 @@
-a
+I want to make a new project. It will be a simple AI assistant helper: It should be a simple program for Windows machine. When executed, it should show an icon on the taskbar tray. It should open an actual window when the shortcut ctrl+space is pressed. This little window should show nothing but the text that was currently selected when the shortcut was pressed, for now.
+I want this written in Python. I want you to fully develop and implement this base idea.
