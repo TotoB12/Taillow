@@ -1,3 +1,0 @@
-I want to start a new project. It will be a general all-purpose AI assistant for Window devices. It will always run in the background, and will be accessible by double clicking the right control key. I want you to help me start this:
-
-It should be writtin in Node.js, and use Electron. When the program is running, it should show an icon in my taskbar. When my right control is double clicked, a search bar should appear on my screen. I want you to fully develop and implement this base idea.

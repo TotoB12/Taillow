@@ -1,3 +1,24 @@
+I am working on a general all-purpose AI assistant for Window devices. I will be a simple program running constantly, that can be called by double clicking the right ctrl key. A text box appears, where user's can enter their query, and get a result. Here is the full project:
+
+index.html
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Taillow</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <input type="text" placeholder="What are you looking for?" autofocus />
+    <script src="renderer.js"></script>
+  </body>
+</html>
+
+```
+
+main.js
+```javascript
 const { app, BrowserWindow, Tray, Menu, ipcMain } = require('electron');
 const path = require('path');
 const { GlobalKeyboardListener } = require('node-global-key-listener');
@@ -97,3 +118,51 @@ app.on('window-all-closed', (e) => {
 app.on('before-quit', () => {
   keyListener.removeAllListeners();
 });
+
+```
+
+renderer.js
+```javascript
+const { ipcRenderer } = require('electron');
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    ipcRenderer.send('hide-window');
+  }
+});
+
+```
+
+style.css
+```css
+body {
+    margin: 0;
+}
+
+input {
+    width: 100%;
+    height: 100%;
+    font-size: 24px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+```
+
+So far so good, but I now want to introduce actual AI responses. When a query is present in the text field, and the user presses the enter key, the program should use the the Google AI API to generate a streaming response. A new box should appear under the input where the answer should be streamed, token by token. I want you to fully develop and implement this.
+
+```
+// Make sure to include these imports:
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+const prompt = "Write a story about a magic backpack.";
+
+const result = await model.generateContentStream(prompt);
+
+// Print text as it comes in.
+for await (const chunk of result.stream) {
+  const chunkText = chunk.text();
+  process.stdout.write(chunkText);
+}
+```

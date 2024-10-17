@@ -11,6 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "dotenv": "^16.4.5",
     "electron": "^33.0.1",
     "node-global-key-listener": "^0.3.0"
   }
