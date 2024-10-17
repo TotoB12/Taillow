@@ -22,55 +22,7 @@ const safetySettings = [
         threshold: HarmBlockThreshold.BLOCK_NONE,
     }
 ];
-
-function getDateAndTime() {
-    const date_and_time = new Date();
-    return { date_and_time: date_and_time };
-}
-
-async function getWeather(location) {
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${process.env.WEATHER_KEY}&units=metric`;
-    return fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            return { weather: data };
-        })
-        .catch(error => {
-            console.error(error);
-            return { error: error };
-        });
-}
-
-const functions = {
-    getDateAndTime: () => {
-        return getDateAndTime()
-    },
-    getWeather: ({ location }) => {
-        return getWeather(location);
-    },
-};
-
-const tools = [
-    {
-        name: "getDateAndTime",
-        description: "Get the current date and time",
-    },
-    {
-        name: "getWeather",
-        parameters: {
-            type: "OBJECT",
-            description: "Get the current weather for a precise location, in metric units",
-            properties: {
-                location: {
-                    type: "STRING",
-                    description: "The precise location/city to get the weather for, in the simplest format possible (e.g. 'washington dc', 'paris'). Do not use commas or other special characters.",
-                },
-            },
-            required: ["location"],
-        },
-    }
-];
-
+const { functions, tools } = require('./tools');
 const model = genAI.getGenerativeModel({
     model: "gemini-1.5-flash-8b-exp-0924",
     systemInstruction: "",
