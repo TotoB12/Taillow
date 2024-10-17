@@ -22,8 +22,58 @@ const safetySettings = [
         threshold: HarmBlockThreshold.BLOCK_NONE,
     }
 ];
+
+function getDateAndTime() {
+    const date_and_time = new Date();
+    return { date_and_time: date_and_time };
+}
+
+async function getWeather(location) {
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${process.env.WEATHER_KEY}&units=metric`;
+    return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            return { weather: data };
+        })
+        .catch(error => {
+            console.error(error);
+            return { error: error };
+        });
+}
+
+const functions = {
+    getDateAndTime: () => {
+        return getDateAndTime()
+    },
+    getWeather: ({ location }) => {
+        return getWeather(location);
+    },
+};
+
+const tools = [
+    {
+        name: "getDateAndTime",
+        description: "Get the current date and time",
+    },
+    {
+        name: "getWeather",
+        parameters: {
+            type: "OBJECT",
+            description: "Get the current weather for a precise location, in metric units",
+            properties: {
+                location: {
+                    type: "STRING",
+                    description: "The precise location/city to get the weather for, in the simplest format possible (e.g. 'washington dc', 'paris'). Do not use commas or other special characters.",
+                },
+            },
+            required: ["location"],
+        },
+    }
+];
+
 const model = genAI.getGenerativeModel({
     model: "gemini-1.5-flash-8b-exp-0924",
+    systemInstruction: "",
     generationConfig: {
         temperature: 0.0,
         maxOutputTokens: 1000,
@@ -33,6 +83,7 @@ const model = genAI.getGenerativeModel({
         frequencyPenalty: 0,
     },
     safetySettings: safetySettings,
+    tools: { functionDeclarations: tools },
 });
 
 let mainWindow;
@@ -125,12 +176,40 @@ ipcMain.on('hide-window', () => {
 
 ipcMain.on('query', async (event, query) => {
     try {
-        const result = await model.generateContentStream(query);
+        let response = null;
+        response = await model.generateContent(query);
+        let tool_results = [];
 
-        for await (const chunk of result.stream) {
-            const chunkText = chunk.text();
-            event.sender.send('response', chunkText);
+        while (response.response.functionCalls()) {
+            if (response.response.text() != "") {
+                console.log("Tool calling text, DONT READ IT,\n" + response.response.text());
+            }
+
+            for (const tool of response.response.functionCalls()) {
+                console.log("Tool name: " + tool.name);
+                console.log("Tool args: " + JSON.stringify(tool.args));
+                const output = await functions[tool.name](tool.args);
+                tool_results.push({
+                    functionResponse: {
+                        name: tool.name,
+                        response: output,
+                    },
+                });
+            }
+
+            console.log("Tool results getting fed back:");
+            for (const tool_result of tool_results) {
+                console.log(tool_result.functionResponse.name);
+                console.log(tool_result.functionResponse.response);
+            }
+
+            response = await model.generateContent([
+                query,
+                tool_results
+            ]);
         }
+        
+        event.sender.send('response', response.response.text());
     } catch (error) {
         console.error(error);
         event.sender.send('response', 'Error: ' + error.message);

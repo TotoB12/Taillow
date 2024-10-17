@@ -226,4 +226,3 @@ input {
 }
 ```
 
-So far so good, but I now want to completely redesign the look and feel of the app. I want you to fully develop and implement a full new redesign, in dark mode, for my program. I still want to keep a simple and elegant minimalistic look and feel. When the window is first opened, only the input bar should be shown.
