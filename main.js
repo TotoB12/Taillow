@@ -67,12 +67,12 @@ let ctrlPressTimes = [];
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 400,
-        height: 300,
+        height: 450,  // Slightly increased to accommodate the gap
         show: false,
         frame: false,
+        transparent: true,
         alwaysOnTop: true,
         skipTaskbar: true,
-        transparent: true,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -83,7 +83,7 @@ function createWindow() {
 
     const { screen } = require('electron');
     const { width } = screen.getPrimaryDisplay().workAreaSize;
-    mainWindow.setPosition((width - 400) / 2, 50);
+    mainWindow.setPosition(width - 420, 50);  // Positioned in top right with some padding
 
     mainWindow.on('blur', () => {
         mainWindow.hide();

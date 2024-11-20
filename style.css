@@ -1,22 +1,67 @@
 body {
     margin: 0;
+    background: transparent;
+    font-family: 'Arial', sans-serif;
 }
 
-input {
-    width: 100%;
-    font-size: 24px;
+.container {
+    display: flex;
+    flex-direction: column;
+    width: 400px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.input-area {
+    background-color: white;
     padding: 10px;
-    box-sizing: border-box;
-    border: none;
-    outline: none;
+    border-bottom: 1px solid #f0f0f0;
 }
 
-#response {
+.input-area input {
     width: 100%;
     font-size: 18px;
     padding: 10px;
     box-sizing: border-box;
-    background-color: #f0f0f0;
+    border: none;
+    outline: none;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+}
+
+.response-area {
+    background-color: white;
+    padding: 15px;
+    max-height: 300px;
     overflow-y: auto;
-    max-height: 200px;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* Add a subtle gap between input and response */
+.gap {
+    height: 10px;
+    background-color: transparent;
+}
+
+/* Scrollbar styling for modern look */
+.response-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.response-area::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+
+.response-area::-webkit-scrollbar-thumb {
+    background: #888; 
+    border-radius: 3px;
+}
+
+.response-area::-webkit-scrollbar-thumb:hover {
+    background: #555; 
 }

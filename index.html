@@ -2,12 +2,17 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Taillow</title>
+    <title>Taillow AI Assistant</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <input type="text" placeholder="What are you looking for?" autofocus />
-    <div id="response"></div>
+    <div class="container">
+      <div class="input-area">
+        <input type="text" placeholder="What can I help you with?" autofocus />
+      </div>
+      <div class="gap"></div>
+      <div id="response" class="response-area"></div>
+    </div>
     <script src="marked.min.js"></script>
     <script src="purify.min.js"></script>
     <script src="renderer.js"></script>
