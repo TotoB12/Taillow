@@ -36,7 +36,7 @@ body {
 }
 
 .response-area {
-    background-color: #1e1e1e; /* Darker gray */
+    background-color: #1e1e1e;
     padding: 15px;
     max-height: 300px;
     overflow-y: auto;
@@ -47,13 +47,11 @@ body {
     border-bottom-right-radius: 12px;
 }
 
-/* Add a subtle gap between input and response */
 .gap {
     height: 10px;
     background-color: transparent;
 }
 
-/* Scrollbar styling for modern look */
 .response-area::-webkit-scrollbar {
     width: 6px;
 }
