@@ -77,7 +77,20 @@ async function performInternetSearch(query) {
         return { webResults: limitedWebResults };
     } catch (error) {
         console.error(error);
-        return { webResults: [] };
+        return { webResults: error };
+    }
+}
+
+async function queryWolframAlpha(query) {
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${process.env.AI_STUDIO_KEY}&input=${encodeURIComponent(query)}`;
+    console.log(url);
+    try {
+        const response = await fetch(url);
+        const data = await response.text();
+        return { response: data };
+    } catch (error) {
+        console.error('Error querying Wolfram Alpha:', error);
+        return { error: error };
     }
 }
 
@@ -96,6 +109,9 @@ const functions = {
     },
     performInternetSearch: ({ query }) => {
         return performInternetSearch(query);
+    },
+    queryWolframAlpha: ({ query }) => {
+        return queryWolframAlpha(query);
     },
 };
 
@@ -155,6 +171,20 @@ const tools = [
                 query: {
                     type: "STRING",
                     description: "The search query for the internet search",
+                },
+            },
+            required: ["query"],
+        },
+    },
+    {
+        name: "queryWolframAlpha",
+        parameters: {
+            type: "OBJECT",
+            description: "Query Wolfram Alpha for information, math, and statistics",
+            properties: {
+                query: {
+                    type: "STRING",
+                    description: "The query to send to Wolfram Alpha",
                 },
             },
             required: ["query"],

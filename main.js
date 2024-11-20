@@ -148,8 +148,6 @@ ipcMain.on('hide-window', () => {
     }
 });
 
-// ... [other imports and code]
-
 ipcMain.on('query', async (event, query) => {
     try {
         let conversationHistory = [
