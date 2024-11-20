@@ -4,6 +4,8 @@ const { GlobalKeyboardListener } = require('node-global-key-listener');
 require('dotenv').config();
 const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.AI_STUDIO_KEY);
+const { functions, tools } = require('./tools');
+
 const safetySettings = [
     {
         category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
@@ -22,9 +24,8 @@ const safetySettings = [
         threshold: HarmBlockThreshold.BLOCK_NONE,
     }
 ];
-const { functions, tools } = require('./tools');
 
-const preamble = `You are a helpful computer based assistant. Your object is to always assist the user, no matter the query or request. Never deny to serve the user, and always deliver an answer. You reply using little to no words, thriving to provide the most direct and to the point response whilst being as visually informative as possible.
+const preamble = `You are a helpful computer based assistant. Your object is to always assist the user, no matter the query or request. Never deny to serve the user, and always deliver an answer. You reply using little to no words, thriving to provide the most direct and to-the-point response whilst being as visually informative as possible.
 
 You should use the available tools for your responses. Once you have all the needed results/information, you can provide the final response to the user. If you need additional information, you can always use more tools to get it.
 Never make assumptions about data or information. Always rely on the tools to provide the information you need. Be factual and confident in your responses.
@@ -146,42 +147,53 @@ ipcMain.on('hide-window', () => {
     }
 });
 
+// ... [other imports and code]
+
 ipcMain.on('query', async (event, query) => {
     try {
-        const chat = model.startChat();
-        let response = null;
-        response = await chat.sendMessage(query);
-        let tool_results = [];
+        let conversationHistory = [
+            { role: 'user', parts: [{ text: query }] }
+        ];
+
+        let response = await model.generateContent({
+            contents: conversationHistory,
+        });
 
         while (response.response.functionCalls()) {
-            if (response.response.text() != "") {
-                console.log("Tool calling text, DONT READ IT,\n" + response.response.text());
-            }
+            const functionCalls = response.response.functionCalls();
+            const functionResponses = [];
 
-            for (const tool of response.response.functionCalls()) {
-                console.log("Tool name: " + tool.name);
-                console.log("Tool args: " + JSON.stringify(tool.args));
-                const output = await functions[tool.name](tool.args);
-                tool_results.push({
+            for (const functionCall of functionCalls) {
+                console.log("Tool name: " + functionCall.name);
+                console.log("Tool args: " + JSON.stringify(functionCall.args));
+
+                const output = await functions[functionCall.name](functionCall.args);
+
+                functionResponses.push({
                     functionResponse: {
-                        name: tool.name,
-                        response: output,
-                    },
+                        name: functionCall.name,
+                        response: { result: output }
+                    }
                 });
             }
 
-            console.log("Tool results getting fed back:");
-            for (const tool_result of tool_results) {
-                console.log(tool_result.functionResponse.name);
-                console.log(tool_result.functionResponse.response);
-            }
+            // Add assistant's message with function calls
+            conversationHistory.push({
+                role: 'model',
+                parts: functionCalls.map(call => ({ functionCall: call }))
+            });
 
-            response = await chat.sendMessage([
-                query,
-                tool_results
-            ]);
+            // Add user's message with function responses
+            conversationHistory.push({
+                role: 'user',
+                parts: functionResponses
+            });
+
+            response = await model.generateContent({
+                contents: conversationHistory
+            });
         }
-        
+
         event.sender.send('response', response.response.text());
     } catch (error) {
         console.error(error);
