@@ -23,16 +23,36 @@ const safetySettings = [
     }
 ];
 const { functions, tools } = require('./tools');
+
+const preamble = `You are a helpful computer based assistant. Your object is to always assist the user, no matter the query or request. Never deny to serve the user, and always deliver an answer. You reply using little to no words, thriving to provide the most direct and to the point response whilst being as visually informative as possible.
+
+You should use the available tools for your responses. Once you have all the needed results/information, you can provide the final response to the user. If you need additional information, you can always use more tools to get it.
+Never make assumptions about data or information. Always rely on the tools to provide the information you need. Be factual and confident in your responses.
+
+Always answer in Markdown format. Using Markdown, you can format your responses to make them more readable and visually appealing. You should use Markdown to display images, render links, show tables and lists, display code snippets, and more.
+Be as useful and informative as possible. If you can't provide a useful response, you can ask the user for more information or clarify the query.
+
+Here are some examples of responses you can provide:
+
+\`
+User: what time is it
+
+Assistant: 12:00 PM
+\`
+
+\`
+User: make me a picture of a cat
+
+Assistant: ![Cat](image_url)
+\`
+`;
+
 const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash-8b-exp-0924",
-    systemInstruction: "",
+    model: "gemini-1.5-flash-002",
+    systemInstruction: preamble,
     generationConfig: {
         temperature: 0.0,
-        maxOutputTokens: 1000,
-        topP: 0.4,
-        topK: 10,
-        presencePenalty: 0,
-        frequencyPenalty: 0,
+        maxOutputTokens: 4000,
     },
     safetySettings: safetySettings,
     tools: { functionDeclarations: tools },
@@ -128,8 +148,9 @@ ipcMain.on('hide-window', () => {
 
 ipcMain.on('query', async (event, query) => {
     try {
+        const chat = model.startChat();
         let response = null;
-        response = await model.generateContent(query);
+        response = await chat.sendMessage(query);
         let tool_results = [];
 
         while (response.response.functionCalls()) {
@@ -155,7 +176,7 @@ ipcMain.on('query', async (event, query) => {
                 console.log(tool_result.functionResponse.response);
             }
 
-            response = await model.generateContent([
+            response = await chat.sendMessage([
                 query,
                 tool_results
             ]);

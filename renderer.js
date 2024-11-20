@@ -15,12 +15,14 @@ inputField.addEventListener('keydown', (event) => {
       event.target.value = '';
 
       const responseDiv = document.getElementById('response');
-      responseDiv.innerText = '';
+      responseDiv.innerHTML = '';
     }
   }
 });
 
 ipcRenderer.on('response', (event, chunk) => {
   const responseDiv = document.getElementById('response');
-  responseDiv.innerText += chunk;
+  const sanitized = DOMPurify.sanitize(chunk);
+  const html = marked.parse(sanitized);
+  responseDiv.innerHTML = html;
 });

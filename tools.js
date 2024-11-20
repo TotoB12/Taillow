@@ -1,4 +1,6 @@
 const { image_search } = require("duckduckgo-images-api");
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 function getDateAndTime() {
     const date_and_time = new Date();
@@ -27,7 +29,8 @@ async function getImage(query) {
             retries: 2,
         });
         const images = results.slice(0, 4).map(result =>
-            `https://wsrv.nl/?url=${encodeURIComponent(result.image)}`
+            // `https://wsrv.nl/?url=${encodeURIComponent(result.image)}`
+            result.image
         );
         return { images };
     } catch (error) {
@@ -37,8 +40,45 @@ async function getImage(query) {
 }
 
 async function generateImage(query) {
-        const imageUrl = `https://fast-flux-demo.replicate.workers.dev/api/generate-image?text=${encodeURIComponent(query)}`;
-        return { url: imageUrl };
+    const imageUrl = `https://fast-flux-demo.replicate.workers.dev/api/generate-image?text=${encodeURIComponent(query)}`;
+    return { generatedImageUrl: imageUrl };
+}
+
+async function performInternetSearch(query) {
+    try {
+        const headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        };
+
+        const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+        const response = await axios.get(url, { headers });
+
+        if (response.status !== 200) {
+            throw new Error(`HTTP error ${response.status}`);
+        }
+
+        const $ = cheerio.load(response.data);
+        const webResults = [];
+        $('div.result.results_links.results_links_deep.web-result').each((i, elem) => {
+            const title = $(elem).find('h2.result__title a.result__a').text().trim();
+            const url = $(elem).find('h2.result__title a.result__a').attr('href');
+            const description = $(elem).find('a.result__snippet').text().trim();
+            const favicon = $(elem).find('img.result__icon__img').attr('src') || '';
+
+            if (!$(elem).find('.badge--ad').length) {
+                webResults.push({ title, url, description, favicon });
+            }
+        });
+
+        const limitedWebResults = webResults.slice(0, 10);
+
+        return { webResults: limitedWebResults };
+    } catch (error) {
+        console.error(error);
+        return { webResults: [] };
+    }
 }
 
 const functions = {
@@ -53,6 +93,9 @@ const functions = {
     },
     generateImage: ({ query }) => {
         return generateImage(query);
+    },
+    performInternetSearch: ({ query }) => {
+        return performInternetSearch(query);
     },
 };
 
@@ -98,6 +141,20 @@ const tools = [
                 query: {
                     type: "STRING",
                     description: "The text to generate the image with",
+                },
+            },
+            required: ["query"],
+        },
+    },
+    {
+        name: "performInternetSearch",
+        parameters: {
+            type: "OBJECT",
+            description: "Perform a search on the internet",
+            properties: {
+                query: {
+                    type: "STRING",
+                    description: "The search query for the internet search",
                 },
             },
             required: ["query"],
