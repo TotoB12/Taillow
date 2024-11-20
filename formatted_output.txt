@@ -463,6 +463,6 @@ const tools = [
 module.exports = { functions, tools };
 ```
 
-This all works, but I want to make significant design changes. Firstly, the app should adopt a dark mode, using gray colors as backgrounds and rainbow borders on the app. The app should also always be shown in the top right corner of the screen, and should be divided into two parts: the top input box (to enter the user's query), and right underneath, the result area. This result area should be very modular and elegant. These two areas should be detached: they should not be touching and should have a gap between each other (this gap should not have anything in it, it should really be empty).
+This all works, but I want to make significant design changes. The app should also always be shown in the top right corner of the screen, and should be divided into two parts: the top input box (to enter the user's query), and right underneath, the result area. This result area should be very modular and elegant. These two areas should be detached: they should not be touching and should have a gap between each other (this gap should not have anything in it, it should really be empty).
 Since I want a lot of elements to appear like "floating" on my screen, is using Electron really the best way to do this, or will I need another package?
 I want you to fully develop and implement this.
