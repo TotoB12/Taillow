@@ -26,3 +26,9 @@ ipcRenderer.on('response', (event, chunk) => {
   const html = marked.parse(sanitized);
   responseDiv.innerHTML = html;
 });
+
+// Add this listener to clear the response area
+ipcRenderer.on('clear-response', () => {
+  const responseDiv = document.getElementById('response');
+  responseDiv.innerHTML = '';
+});

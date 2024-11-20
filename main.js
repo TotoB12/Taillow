@@ -66,8 +66,8 @@ let ctrlPressTimes = [];
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 400,
-        height: 450,  // Slightly increased to accommodate the gap
+        width: 430,
+        height: 450,
         show: false,
         frame: false,
         transparent: true,
@@ -83,11 +83,12 @@ function createWindow() {
 
     const { screen } = require('electron');
     const { width } = screen.getPrimaryDisplay().workAreaSize;
-    mainWindow.setPosition(width - 420, 50);  // Positioned in top right with some padding
+    mainWindow.setPosition(width - 450, 20);
 
     mainWindow.on('blur', () => {
+        mainWindow.webContents.send('clear-response');
         mainWindow.hide();
-    });
+    });    
 
     mainWindow.on('closed', () => {
         mainWindow = null;
@@ -177,13 +178,11 @@ ipcMain.on('query', async (event, query) => {
                 });
             }
 
-            // Add assistant's message with function calls
             conversationHistory.push({
                 role: 'model',
                 parts: functionCalls.map(call => ({ functionCall: call }))
             });
 
-            // Add user's message with function responses
             conversationHistory.push({
                 role: 'user',
                 parts: functionResponses
