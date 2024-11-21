@@ -77,10 +77,12 @@ body {
 .response-area p,
 .response-area h1,
 .response-area h2,
-.response-area h3 {
+.response-area h3,
+.response-area ul {
     background: #1e1e1e;
     border-radius: 12px;
     padding: 15px;
+    margin: 0;
 }
 
 .response-area pre {

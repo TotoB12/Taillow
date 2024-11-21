@@ -29,10 +29,22 @@ main.js
 const { app, BrowserWindow, Tray, Menu, ipcMain, screen } = require('electron');
 const path = require('path');
 const { GlobalKeyboardListener } = require('node-global-key-listener');
+const axios = require('axios');
 require('dotenv').config();
 const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.AI_STUDIO_KEY);
 const { functions, tools } = require('./tools');
+
+function fetchUserInfo() {
+    return axios.get('https://api.ipapi.is/')
+        .then(response => {
+            userInfo = response.data;
+            console.log('User Info:', userInfo);
+        })
+        .catch(error => {
+            console.error('Error fetching user info:', error);
+        });
+}
 
 const safetySettings = [
     {
@@ -123,7 +135,7 @@ function createWindow() {
     mainWindow.on('blur', () => {
         mainWindow.webContents.send('clear-response');
         mainWindow.hide();
-    });    
+    });
 
     mainWindow.on('closed', () => {
         mainWindow = null;
@@ -170,6 +182,8 @@ app.whenReady().then(() => {
                 if (mainWindow) {
                     mainWindow.show();
                     mainWindow.focus();
+
+                    fetchUserInfoPromise = fetchUserInfo();
                 }
                 ctrlPressTimes = [];
             }
@@ -198,6 +212,26 @@ ipcMain.on('adjust-window-height', (event, contentHeight) => {
 
 ipcMain.on('query', async (event, query) => {
     try {
+        if (fetchUserInfoPromise) {
+            await fetchUserInfoPromise;
+        }
+
+        let preambleWithUserInfo = preamble;
+        if (userInfo) {
+            preambleWithUserInfo += `\n\nHere is some information about the user:\n${JSON.stringify(userInfo, null, 2)}\n`;
+        }
+
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash-002",
+            systemInstruction: preambleWithUserInfo,
+            generationConfig: {
+                temperature: 0.0,
+                maxOutputTokens: 4000,
+            },
+            safetySettings: safetySettings,
+            tools: { functionDeclarations: tools },
+        });
+
         let conversationHistory = [
             { role: 'user', parts: [{ text: query }] }
         ];
@@ -413,10 +447,12 @@ body {
 .response-area p,
 .response-area h1,
 .response-area h2,
-.response-area h3 {
+.response-area h3,
+.response-area ul {
     background: #1e1e1e;
     border-radius: 12px;
     padding: 15px;
+    margin: 0;
 }
 
 .response-area pre {
@@ -490,8 +526,8 @@ async function getImage(query) {
             retries: 2,
         });
         const images = results.slice(0, 4).map(result =>
-            // `https://wsrv.nl/?url=${encodeURIComponent(result.image)}`
-            result.image
+            `https://wsrv.nl/?url=${encodeURIComponent(result.image)}&w=300&h=300`
+            // result.image
         );
         return { images };
     } catch (error) {
@@ -629,7 +665,7 @@ const tools = [
         name: "performInternetSearch",
         parameters: {
             type: "OBJECT",
-            description: "Perform a search on the internet",
+            description: "Perform a search on the internet. To use for general information and web results",
             properties: {
                 query: {
                     type: "STRING",
@@ -643,7 +679,7 @@ const tools = [
         name: "queryWolframAlpha",
         parameters: {
             type: "OBJECT",
-            description: "Query Wolfram Alpha for information, math, and statistics",
+            description: "Query Wolfram Alpha for information, math, statistics",
             properties: {
                 query: {
                     type: "STRING",
@@ -658,5 +694,19 @@ const tools = [
 module.exports = { functions, tools };
 ```
 
-This all works well, but I want to add a new feature. As soon as the program is opened (using the keybind), I want the script to call the site `https://api.ipapi.is/`. This will return a JSON. I want this JSON to be added to the system prompt, to give information on the user, whenever the next query is sent. Any time the program is reopened, the latest user info variable should be updated with a new call to this API site.
-I want you to fully develop and implement this.
+I need to make a change. Currently, any p, h2, h3, ul... gets some padding and a dark background. This looks great when the response from the AI is text, or also text and images, but it looks bad when it is just an image. To fix this, I want the script to check if a response if composed of only images: if this is the case, then all the CSS that normaly applies to `<p>` elements in the response: 
+
+```css
+.response-area p,
+.response-area h1,
+.response-area h2,
+.response-area h3,
+.response-area ul {
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 0;
+}
+```
+
+should be disabled. I want you to fully develop and implement this.

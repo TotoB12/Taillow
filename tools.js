@@ -29,8 +29,8 @@ async function getImage(query) {
             retries: 2,
         });
         const images = results.slice(0, 4).map(result =>
-            // `https://wsrv.nl/?url=${encodeURIComponent(result.image)}`
-            result.image
+            `https://wsrv.nl/?url=${encodeURIComponent(result.image)}&w=300&h=300`
+            // result.image
         );
         return { images };
     } catch (error) {
@@ -168,7 +168,7 @@ const tools = [
         name: "performInternetSearch",
         parameters: {
             type: "OBJECT",
-            description: "Perform a search on the internet",
+            description: "Perform a search on the internet. To use for general information and web results",
             properties: {
                 query: {
                     type: "STRING",
@@ -182,7 +182,7 @@ const tools = [
         name: "queryWolframAlpha",
         parameters: {
             type: "OBJECT",
-            description: "Query Wolfram Alpha for information, math, and statistics",
+            description: "Query Wolfram Alpha for information, math, statistics",
             properties: {
                 query: {
                     type: "STRING",

@@ -1,10 +1,22 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, screen } = require('electron');
 const path = require('path');
 const { GlobalKeyboardListener } = require('node-global-key-listener');
+const axios = require('axios');
 require('dotenv').config();
 const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.AI_STUDIO_KEY);
 const { functions, tools } = require('./tools');
+
+function fetchUserInfo() {
+    return axios.get('https://api.ipapi.is/')
+        .then(response => {
+            userInfo = response.data;
+            console.log('User Info:', userInfo);
+        })
+        .catch(error => {
+            console.error('Error fetching user info:', error);
+        });
+}
 
 const safetySettings = [
     {
@@ -95,7 +107,7 @@ function createWindow() {
     mainWindow.on('blur', () => {
         mainWindow.webContents.send('clear-response');
         mainWindow.hide();
-    });    
+    });
 
     mainWindow.on('closed', () => {
         mainWindow = null;
@@ -142,6 +154,8 @@ app.whenReady().then(() => {
                 if (mainWindow) {
                     mainWindow.show();
                     mainWindow.focus();
+
+                    fetchUserInfoPromise = fetchUserInfo();
                 }
                 ctrlPressTimes = [];
             }
@@ -170,6 +184,26 @@ ipcMain.on('adjust-window-height', (event, contentHeight) => {
 
 ipcMain.on('query', async (event, query) => {
     try {
+        if (fetchUserInfoPromise) {
+            await fetchUserInfoPromise;
+        }
+
+        let preambleWithUserInfo = preamble;
+        if (userInfo) {
+            preambleWithUserInfo += `\n\nHere is some information about the user:\n${JSON.stringify(userInfo, null, 2)}\n`;
+        }
+
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash-002",
+            systemInstruction: preambleWithUserInfo,
+            generationConfig: {
+                temperature: 0.0,
+                maxOutputTokens: 4000,
+            },
+            safetySettings: safetySettings,
+            tools: { functionDeclarations: tools },
+        });
+
         let conversationHistory = [
             { role: 'user', parts: [{ text: query }] }
         ];
