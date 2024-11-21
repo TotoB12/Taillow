@@ -26,7 +26,7 @@ index.html
 
 main.js
 ```javascript
-const { app, BrowserWindow, Tray, Menu, ipcMain } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, screen } = require('electron');
 const path = require('path');
 const { GlobalKeyboardListener } = require('node-global-key-listener');
 require('dotenv').config();
@@ -58,15 +58,23 @@ const preamble = `You are a helpful computer based assistant. Your object is to 
 You should use the available tools for your responses. Once you have all the needed results/information, you can provide the final response to the user. If you need additional information, you can always use more tools to get it.
 Never make assumptions about data or information. Always rely on the tools to provide the information you need. Be factual and confident in your responses.
 
-Always answer in Markdown format. Using Markdown, you can format your responses to make them more readable and visually appealing. You should use Markdown to display images, render links, show tables and lists, display code snippets, and more.
 Be as useful and informative as possible. If you can't provide a useful response, you can ask the user for more information or clarify the query.
+Always answer in Markdown format. Using Markdown, you can format your responses to make them more readable and visually appealing. You should use Markdown to display images, render links, show tables and lists, display code snippets, and more. All your responses should aim to be as visually informative as possible: use different text sizes and colors, images, tables, and lists to make your responses more engaging and informative.
 
 Here are some examples of responses you can provide:
 
 \`
 User: what time is it
 
-Assistant: 12:00 PM
+Assistant: ## 12:00 <sup>PM</sup>
+\`
+
+\`
+User: what is the weather in New York
+
+Assistant: ## New York
+<b>47°F</b> 🌧️
+Rain, fog, overcast
 \`
 
 \`
@@ -95,7 +103,7 @@ let ctrlPressTimes = [];
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 430,
-        height: 450,
+        height: 200,
         show: false,
         frame: false,
         transparent: true,
@@ -109,7 +117,6 @@ function createWindow() {
 
     mainWindow.loadFile('index.html');
 
-    const { screen } = require('electron');
     const { width } = screen.getPrimaryDisplay().workAreaSize;
     mainWindow.setPosition(width - 450, 20);
 
@@ -173,6 +180,19 @@ app.whenReady().then(() => {
 ipcMain.on('hide-window', () => {
     if (mainWindow) {
         mainWindow.hide();
+    }
+});
+
+ipcMain.on('adjust-window-height', (event, height) => {
+    if (mainWindow) {
+        const { height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+        const maxHeight = Math.floor(screenHeight * 0.8);
+        const newHeight = Math.min(height, maxHeight);
+
+        mainWindow.setSize(mainWindow.getSize()[0], newHeight);
+
+        const { width } = screen.getPrimaryDisplay().workAreaSize;
+        mainWindow.setPosition(width - mainWindow.getSize()[0] - 20, 20);
     }
 });
 
@@ -265,18 +285,52 @@ ipcRenderer.on('response', (event, chunk) => {
   const sanitized = DOMPurify.sanitize(chunk);
   const html = marked.parse(sanitized);
   responseDiv.innerHTML = html;
+
+  const adjustHeight = () => {
+    const container = document.querySelector('.container');
+    const totalHeight = container.scrollHeight + 22;
+    ipcRenderer.send('adjust-window-height', totalHeight);
+  };
+
+  const images = responseDiv.getElementsByTagName('img');
+  if (images.length > 0) {
+    let imagesLoaded = 0;
+    for (let img of images) {
+      img.addEventListener('load', () => {
+        imagesLoaded++;
+        if (imagesLoaded === images.length) {
+          adjustHeight();
+        }
+      });
+      img.addEventListener('error', () => {
+        imagesLoaded++;
+        if (imagesLoaded === images.length) {
+          adjustHeight();
+        }
+      });
+    }
+  } else {
+    adjustHeight();
+  }
 });
 
-// Add this listener to clear the response area
 ipcRenderer.on('clear-response', () => {
   const responseDiv = document.getElementById('response');
   responseDiv.innerHTML = '';
+
+  setTimeout(() => {
+    const container = document.querySelector('.container');
+    const totalHeight = container.scrollHeight + 20;
+    ipcRenderer.send('adjust-window-height', totalHeight);
+  }, 50);
 });
 
 ```
 
 style.css
 ```css
+/* Updated style.css */
+
 body {
     margin: 0;
     background: transparent;
@@ -317,13 +371,30 @@ body {
 .response-area {
     background-color: #1e1e1e;
     padding: 15px;
-    max-height: 300px;
-    overflow-y: auto;
+    overflow-x: hidden;
     font-size: 16px;
     line-height: 1.6;
     color: #ffffff;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
+    word-wrap: break-word;
+}
+
+.response-area img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 10px 0;
+}
+
+.response-area pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.response-area table {
+    width: 100%;
+    table-layout: fixed;
 }
 
 .gap {
@@ -549,5 +620,5 @@ const tools = [
 module.exports = { functions, tools };
 ```
 
-This all works, but I want to make some changes. When a result is received from the AI, it may be bigger than the result area. I want any and all elements in the result to fit: the text and images should not ever overflow and render the box scrollable horizontaly. Also, I do not want the app to have a set height, and rather for the program to take up as much height as needed.
+This all works, but I have an issue. If the rendered content in the result area is longer than the max height allowed of the program, then it will still have it be rendered up to that point, and the app simply cuts it off: I also need the HTML to have the same max height of 80% of the screen's height. And if the HTML gets this limit, does the program also need to have that redundant 80% height limit?
 I want you to fully develop and implement this.

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, screen } = require('electron');
 const path = require('path');
 const { GlobalKeyboardListener } = require('node-global-key-listener');
 require('dotenv').config();
@@ -42,6 +42,14 @@ Assistant: ## 12:00 <sup>PM</sup>
 \`
 
 \`
+User: what is the weather in New York
+
+Assistant: ## New York
+<b>47°F</b> 🌧️
+Rain, fog, overcast
+\`
+
+\`
 User: make me a picture of a cat
 
 Assistant: ![Cat](image_url)
@@ -67,7 +75,7 @@ let ctrlPressTimes = [];
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 430,
-        height: 450,
+        height: 200,
         show: false,
         frame: false,
         transparent: true,
@@ -81,7 +89,6 @@ function createWindow() {
 
     mainWindow.loadFile('index.html');
 
-    const { screen } = require('electron');
     const { width } = screen.getPrimaryDisplay().workAreaSize;
     mainWindow.setPosition(width - 450, 20);
 
@@ -145,6 +152,19 @@ app.whenReady().then(() => {
 ipcMain.on('hide-window', () => {
     if (mainWindow) {
         mainWindow.hide();
+    }
+});
+
+ipcMain.on('adjust-window-height', (event, height) => {
+    if (mainWindow) {
+        const { height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+        const maxHeight = Math.floor(screenHeight * 0.8);
+        const newHeight = Math.min(height, maxHeight);
+
+        mainWindow.setSize(mainWindow.getSize()[0], newHeight);
+
+        const { width } = screen.getPrimaryDisplay().workAreaSize;
+        mainWindow.setPosition(width - mainWindow.getSize()[0] - 20, 20);
     }
 });
 

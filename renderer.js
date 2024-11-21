@@ -25,10 +25,42 @@ ipcRenderer.on('response', (event, chunk) => {
   const sanitized = DOMPurify.sanitize(chunk);
   const html = marked.parse(sanitized);
   responseDiv.innerHTML = html;
+
+  const adjustHeight = () => {
+    const container = document.querySelector('.container');
+    const totalHeight = container.scrollHeight + 22;
+    ipcRenderer.send('adjust-window-height', totalHeight);
+  };
+
+  const images = responseDiv.getElementsByTagName('img');
+  if (images.length > 0) {
+    let imagesLoaded = 0;
+    for (let img of images) {
+      img.addEventListener('load', () => {
+        imagesLoaded++;
+        if (imagesLoaded === images.length) {
+          adjustHeight();
+        }
+      });
+      img.addEventListener('error', () => {
+        imagesLoaded++;
+        if (imagesLoaded === images.length) {
+          adjustHeight();
+        }
+      });
+    }
+  } else {
+    adjustHeight();
+  }
 });
 
-// Add this listener to clear the response area
 ipcRenderer.on('clear-response', () => {
   const responseDiv = document.getElementById('response');
   responseDiv.innerHTML = '';
+
+  setTimeout(() => {
+    const container = document.querySelector('.container');
+    const totalHeight = container.scrollHeight + 20;
+    ipcRenderer.send('adjust-window-height', totalHeight);
+  }, 50);
 });

@@ -1,3 +1,5 @@
+/* Updated style.css */
+
 body {
     margin: 0;
     background: transparent;
@@ -38,13 +40,30 @@ body {
 .response-area {
     background-color: #1e1e1e;
     padding: 15px;
-    max-height: 300px;
-    overflow-y: auto;
+    overflow-x: hidden;
     font-size: 16px;
     line-height: 1.6;
     color: #ffffff;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
+    word-wrap: break-word;
+}
+
+.response-area img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 10px 0;
+}
+
+.response-area pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.response-area table {
+    width: 100%;
+    table-layout: fixed;
 }
 
 .gap {
