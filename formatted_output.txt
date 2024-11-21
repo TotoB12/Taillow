@@ -712,4 +712,4 @@ const tools = [
 module.exports = { functions, tools };
 ```
 
-This all works well, but I have an issue. When the keybind is pressed (double control) and the program is opened, it isnt properly selected/focused. I also notice that it appears to open itself twice, flashing twice on the screen. I need this to be fixed. I want you to figure it out.
+This all works well, but I have an issue. When the keybind is pressed (double control) and the program is opened, it isnt properly selected/focused. I also notice that it appears to open itself twice, flashing twice on the screen. I need this to be fixed. Is the window being reopened/generated every time? Should it be? What would be the best design? I want you to fully develop and implement a fix.
