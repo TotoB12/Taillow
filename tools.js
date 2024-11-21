@@ -29,7 +29,7 @@ async function getImage(query) {
             retries: 2,
         });
         const images = results.slice(0, 4).map(result =>
-            `https://wsrv.nl/?url=${encodeURIComponent(result.image)}&w=300&h=300`
+            `https://wsrv.nl/?url=${encodeURIComponent(result.image)}&w=350&h=350`
             // result.image
         );
         return { images };

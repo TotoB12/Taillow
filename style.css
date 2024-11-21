@@ -74,11 +74,11 @@ body {
     border-radius: 12px;
 }
 
-.response-area p,
-.response-area h1,
-.response-area h2,
-.response-area h3,
-.response-area ul {
+.response-area:not(.images-only) p,
+.response-area:not(.images-only) h1,
+.response-area:not(.images-only) h2,
+.response-area:not(.images-only) h3,
+.response-area:not(.images-only) ul {
     background: #1e1e1e;
     border-radius: 12px;
     padding: 15px;

@@ -25,6 +25,35 @@ ipcRenderer.on('response', (event, chunk) => {
   const sanitized = DOMPurify.sanitize(chunk);
   const html = marked.parse(sanitized);
   responseDiv.innerHTML = html;
+  
+  function isImagesOnly(element) {
+    const nodes = element.childNodes;
+    for (let node of nodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node.textContent.trim().length > 0) {
+          return false;
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const tagName = node.tagName.toLowerCase();
+        if (tagName === 'img' || tagName === 'br') {
+          continue;
+        } else {
+          if (!isImagesOnly(node)) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+  
+  const imagesOnly = isImagesOnly(responseDiv);
+  
+  if (imagesOnly) {
+    responseDiv.classList.add('images-only');
+  } else {
+    responseDiv.classList.remove('images-only');
+  }
 
   const adjustHeight = () => {
     const inputAreaHeight = document.querySelector('.input-area').offsetHeight;
