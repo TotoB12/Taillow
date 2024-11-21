@@ -94,6 +94,8 @@ async function queryWolframAlpha(query) {
     }
 }
 
+// I want to add a new tool that can take a screenshot of my screen.
+
 const functions = {
     getDateAndTime: () => {
         return getDateAndTime()

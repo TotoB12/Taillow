@@ -620,5 +620,5 @@ const tools = [
 module.exports = { functions, tools };
 ```
 
-This all works, but I have an issue. If the rendered content in the result area is longer than the max height allowed of the program, then it will still have it be rendered up to that point, and the app simply cuts it off: I also need the HTML to have the same max height of 80% of the screen's height. And if the HTML gets this limit, does the program also need to have that redundant 80% height limit?
+This all works, but I have an issue. If the rendered content in the result area is longer than the max height allowed of the program, then it will still have it be rendered up to that point, and the app simply cuts it off: I also need the HTML to have the same max height of 80% of the screen's height. But only the response/result area should be scrollable; the input area should never move. I want to keep the transparent gap between the input area and the result area.
 I want you to fully develop and implement this.

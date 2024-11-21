@@ -1,9 +1,25 @@
-/* Updated style.css */
-
 body {
+    font-family: 'Poly Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
     background: transparent;
-    font-family: 'Arial', sans-serif;
+}
+
+@font-face {
+    font-family: "Poly Sans";
+    src: url('fonts/PolySansNeutral.ttf');
+    format: ('truetype');
+}
+
+@font-face {
+    font-family: "Poly Sans Bulky";
+    src: url('fonts/PolySansBulky.ttf');
+    format: ('truetype');
+}
+
+@font-face {
+    font-family: "Poly Sans Slim";
+    src: url('fonts/PolySansSlim.ttf');
+    format: ('truetype');
 }
 
 .container {
@@ -21,8 +37,7 @@ body {
     background-color: #2e2e2e;
     padding: 10px;
     border-bottom: 1px solid #3a3a3a;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
+    border-radius: 12px;
 }
 
 .input-area input {
@@ -44,8 +59,7 @@ body {
     font-size: 16px;
     line-height: 1.6;
     color: #ffffff;
-    border-bottom-left-radius: 12px;
-    border-bottom-right-radius: 12px;
+    border-radius: 12px;
     word-wrap: break-word;
 }
 
@@ -76,14 +90,14 @@ body {
 }
 
 .response-area::-webkit-scrollbar-track {
-    background: #2e2e2e; 
+    background: #2e2e2e;
 }
 
 .response-area::-webkit-scrollbar-thumb {
-    background: #555; 
+    background: #555;
     border-radius: 3px;
 }
 
 .response-area::-webkit-scrollbar-thumb:hover {
-    background: #777; 
+    background: #777;
 }
