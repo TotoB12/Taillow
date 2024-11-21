@@ -68,17 +68,6 @@ Assistant: ![Cat](image_url)
 \`
 `;
 
-const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash-002",
-    systemInstruction: preamble,
-    generationConfig: {
-        temperature: 0.0,
-        maxOutputTokens: 4000,
-    },
-    safetySettings: safetySettings,
-    tools: { functionDeclarations: tools },
-});
-
 let mainWindow;
 let tray;
 let keyListener = new GlobalKeyboardListener();

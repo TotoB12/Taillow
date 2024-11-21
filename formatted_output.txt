@@ -96,17 +96,6 @@ Assistant: ![Cat](image_url)
 \`
 `;
 
-const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash-002",
-    systemInstruction: preamble,
-    generationConfig: {
-        temperature: 0.0,
-        maxOutputTokens: 4000,
-    },
-    safetySettings: safetySettings,
-    tools: { functionDeclarations: tools },
-});
-
 let mainWindow;
 let tray;
 let keyListener = new GlobalKeyboardListener();
@@ -320,6 +309,35 @@ ipcRenderer.on('response', (event, chunk) => {
   const sanitized = DOMPurify.sanitize(chunk);
   const html = marked.parse(sanitized);
   responseDiv.innerHTML = html;
+  
+  function isImagesOnly(element) {
+    const nodes = element.childNodes;
+    for (let node of nodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node.textContent.trim().length > 0) {
+          return false;
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const tagName = node.tagName.toLowerCase();
+        if (tagName === 'img' || tagName === 'br') {
+          continue;
+        } else {
+          if (!isImagesOnly(node)) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+  
+  const imagesOnly = isImagesOnly(responseDiv);
+  
+  if (imagesOnly) {
+    responseDiv.classList.add('images-only');
+  } else {
+    responseDiv.classList.remove('images-only');
+  }
 
   const adjustHeight = () => {
     const inputAreaHeight = document.querySelector('.input-area').offsetHeight;
@@ -444,11 +462,11 @@ body {
     border-radius: 12px;
 }
 
-.response-area p,
-.response-area h1,
-.response-area h2,
-.response-area h3,
-.response-area ul {
+.response-area:not(.images-only) p,
+.response-area:not(.images-only) h1,
+.response-area:not(.images-only) h2,
+.response-area:not(.images-only) h3,
+.response-area:not(.images-only) ul {
     background: #1e1e1e;
     border-radius: 12px;
     padding: 15px;
@@ -526,7 +544,7 @@ async function getImage(query) {
             retries: 2,
         });
         const images = results.slice(0, 4).map(result =>
-            `https://wsrv.nl/?url=${encodeURIComponent(result.image)}&w=300&h=300`
+            `https://wsrv.nl/?url=${encodeURIComponent(result.image)}&w=350&h=350`
             // result.image
         );
         return { images };
@@ -694,19 +712,4 @@ const tools = [
 module.exports = { functions, tools };
 ```
 
-I need to make a change. Currently, any p, h2, h3, ul... gets some padding and a dark background. This looks great when the response from the AI is text, or also text and images, but it looks bad when it is just an image. To fix this, I want the script to check if a response if composed of only images: if this is the case, then all the CSS that normaly applies to `<p>` elements in the response: 
-
-```css
-.response-area p,
-.response-area h1,
-.response-area h2,
-.response-area h3,
-.response-area ul {
-    background: #1e1e1e;
-    border-radius: 12px;
-    padding: 15px;
-    margin: 0;
-}
-```
-
-should be disabled. I want you to fully develop and implement this.
+This all works well, but I have an issue. When the keybind is pressed (double control) and the program is opened, it isnt properly selected/focused. I also notice that it appears to open itself twice, flashing twice on the screen. I need this to be fixed. I want you to figure it out.
