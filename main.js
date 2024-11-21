@@ -155,11 +155,11 @@ ipcMain.on('hide-window', () => {
     }
 });
 
-ipcMain.on('adjust-window-height', (event, height) => {
+ipcMain.on('adjust-window-height', (event, contentHeight) => {
     if (mainWindow) {
         const { height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
         const maxHeight = Math.floor(screenHeight * 0.8);
-        const newHeight = Math.min(height, maxHeight);
+        const newHeight = Math.min(contentHeight, maxHeight);
 
         mainWindow.setSize(mainWindow.getSize()[0], newHeight);
 

@@ -27,8 +27,12 @@ ipcRenderer.on('response', (event, chunk) => {
   responseDiv.innerHTML = html;
 
   const adjustHeight = () => {
-    const container = document.querySelector('.container');
-    const totalHeight = container.scrollHeight + 22;
+    const inputAreaHeight = document.querySelector('.input-area').offsetHeight;
+    const gapHeight = document.querySelector('.gap').offsetHeight;
+    const responseAreaHeight = document.querySelector('.response-area').scrollHeight;
+
+    const totalHeight = inputAreaHeight + gapHeight + responseAreaHeight + 22;
+
     ipcRenderer.send('adjust-window-height', totalHeight);
   };
 

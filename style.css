@@ -31,6 +31,7 @@ body {
     right: 20px;
     border-radius: 12px;
     overflow: hidden;
+    max-height: 700px;
 }
 
 .input-area {
@@ -38,6 +39,7 @@ body {
     padding: 10px;
     border-bottom: 1px solid #3a3a3a;
     border-radius: 12px;
+    flex-shrink: 0;
 }
 
 .input-area input {
@@ -53,14 +55,16 @@ body {
 }
 
 .response-area {
-    background-color: #1e1e1e;
-    padding: 15px;
+    /* background-color: #1e1e1e; */
+    background-color: transparent;
+    overflow-y: auto;
     overflow-x: hidden;
     font-size: 16px;
     line-height: 1.6;
     color: #ffffff;
     border-radius: 12px;
     word-wrap: break-word;
+    flex-grow: 1;
 }
 
 .response-area img {
@@ -68,6 +72,7 @@ body {
     height: auto;
     display: block;
     margin: 10px 0;
+    border-radius: 12px;
 }
 
 .response-area pre {
@@ -83,9 +88,14 @@ body {
 .gap {
     height: 10px;
     background-color: transparent;
+    flex-shrink: 0;
 }
 
 .response-area::-webkit-scrollbar {
+    display: none;
+}
+
+/* .response-area::-webkit-scrollbar {
     width: 6px;
 }
 
@@ -100,4 +110,4 @@ body {
 
 .response-area::-webkit-scrollbar-thumb:hover {
     background: #777;
-}
+} */
