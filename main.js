@@ -38,7 +38,7 @@ Here are some examples of responses you can provide:
 \`
 User: what time is it
 
-Assistant: ## 12:00 <sup>PM</sup>
+Assistant: ## 12:00 PM
 \`
 
 \`
@@ -118,7 +118,7 @@ function createTray() {
             },
         },
     ]);
-    tray.setToolTip('AI Assistant');
+    tray.setToolTip('Taillow');
     tray.setContextMenu(contextMenu);
 }
 
@@ -187,6 +187,7 @@ ipcMain.on('query', async (event, query) => {
                 console.log("Tool args: " + JSON.stringify(functionCall.args));
 
                 const output = await functions[functionCall.name](functionCall.args);
+                console.log("Tool output: " + JSON.stringify(output));
 
                 functionResponses.push({
                     functionResponse: {

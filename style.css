@@ -55,7 +55,6 @@ body {
 }
 
 .response-area {
-    /* background-color: #1e1e1e; */
     background-color: transparent;
     overflow-y: auto;
     overflow-x: hidden;
@@ -73,6 +72,15 @@ body {
     display: block;
     margin: 10px 0;
     border-radius: 12px;
+}
+
+.response-area p,
+.response-area h1,
+.response-area h2,
+.response-area h3 {
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 15px;
 }
 
 .response-area pre {

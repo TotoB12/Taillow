@@ -3,7 +3,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 function getDateAndTime() {
-    const date_and_time = new Date();
+    const date_and_time = new Date().toUTCString();
     return { date_and_time: date_and_time };
 }
 
