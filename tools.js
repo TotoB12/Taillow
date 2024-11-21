@@ -82,7 +82,7 @@ async function performInternetSearch(query) {
 }
 
 async function queryWolframAlpha(query) {
-    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${process.env.AI_STUDIO_KEY}&input=${encodeURIComponent(query)}`;
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${process.env.WOLFRAMALPHA_KEY}&input=${encodeURIComponent(query)}`;
     console.log(url);
     try {
         const response = await fetch(url);

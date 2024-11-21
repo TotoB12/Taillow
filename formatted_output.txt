@@ -94,8 +94,8 @@ let ctrlPressTimes = [];
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 400,
-        height: 450,  // Slightly increased to accommodate the gap
+        width: 430,
+        height: 450,
         show: false,
         frame: false,
         transparent: true,
@@ -111,11 +111,12 @@ function createWindow() {
 
     const { screen } = require('electron');
     const { width } = screen.getPrimaryDisplay().workAreaSize;
-    mainWindow.setPosition(width - 420, 50);  // Positioned in top right with some padding
+    mainWindow.setPosition(width - 450, 20);
 
     mainWindow.on('blur', () => {
+        mainWindow.webContents.send('clear-response');
         mainWindow.hide();
-    });
+    });    
 
     mainWindow.on('closed', () => {
         mainWindow = null;
@@ -175,8 +176,6 @@ ipcMain.on('hide-window', () => {
     }
 });
 
-// ... [other imports and code]
-
 ipcMain.on('query', async (event, query) => {
     try {
         let conversationHistory = [
@@ -205,13 +204,11 @@ ipcMain.on('query', async (event, query) => {
                 });
             }
 
-            // Add assistant's message with function calls
             conversationHistory.push({
                 role: 'model',
                 parts: functionCalls.map(call => ({ functionCall: call }))
             });
 
-            // Add user's message with function responses
             conversationHistory.push({
                 role: 'user',
                 parts: functionResponses
@@ -270,6 +267,12 @@ ipcRenderer.on('response', (event, chunk) => {
   responseDiv.innerHTML = html;
 });
 
+// Add this listener to clear the response area
+ipcRenderer.on('clear-response', () => {
+  const responseDiv = document.getElementById('response');
+  responseDiv.innerHTML = '';
+});
+
 ```
 
 style.css
@@ -287,15 +290,16 @@ body {
     position: fixed;
     top: 20px;
     right: 20px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     border-radius: 12px;
     overflow: hidden;
 }
 
 .input-area {
-    background-color: white;
+    background-color: #2e2e2e;
     padding: 10px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #3a3a3a;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
 }
 
 .input-area input {
@@ -305,42 +309,45 @@ body {
     box-sizing: border-box;
     border: none;
     outline: none;
-    background-color: #f8f8f8;
+    background-color: #424242;
+    color: #ffffff;
     border-radius: 8px;
 }
 
 .response-area {
-    background-color: white;
+    background-color: #1e1e1e;
     padding: 15px;
     max-height: 300px;
     overflow-y: auto;
     font-size: 16px;
     line-height: 1.6;
+    color: #ffffff;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
 }
 
-/* Add a subtle gap between input and response */
 .gap {
     height: 10px;
     background-color: transparent;
 }
 
-/* Scrollbar styling for modern look */
 .response-area::-webkit-scrollbar {
     width: 6px;
 }
 
 .response-area::-webkit-scrollbar-track {
-    background: #f1f1f1; 
+    background: #2e2e2e; 
 }
 
 .response-area::-webkit-scrollbar-thumb {
-    background: #888; 
+    background: #555; 
     border-radius: 3px;
 }
 
 .response-area::-webkit-scrollbar-thumb:hover {
-    background: #555; 
+    background: #777; 
 }
+
 ```
 
 tools.js
@@ -424,7 +431,20 @@ async function performInternetSearch(query) {
         return { webResults: limitedWebResults };
     } catch (error) {
         console.error(error);
-        return { webResults: [] };
+        return { webResults: error };
+    }
+}
+
+async function queryWolframAlpha(query) {
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${process.env.WOLFRAMALPHA_KEY}&input=${encodeURIComponent(query)}`;
+    console.log(url);
+    try {
+        const response = await fetch(url);
+        const data = await response.text();
+        return { response: data };
+    } catch (error) {
+        console.error('Error querying Wolfram Alpha:', error);
+        return { error: error };
     }
 }
 
@@ -443,6 +463,9 @@ const functions = {
     },
     performInternetSearch: ({ query }) => {
         return performInternetSearch(query);
+    },
+    queryWolframAlpha: ({ query }) => {
+        return queryWolframAlpha(query);
     },
 };
 
@@ -507,10 +530,24 @@ const tools = [
             required: ["query"],
         },
     },
+    {
+        name: "queryWolframAlpha",
+        parameters: {
+            type: "OBJECT",
+            description: "Query Wolfram Alpha for information, math, and statistics",
+            properties: {
+                query: {
+                    type: "STRING",
+                    description: "The query to send to Wolfram Alpha",
+                },
+            },
+            required: ["query"],
+        },
+    },
 ];
 
 module.exports = { functions, tools };
 ```
 
-This all works, but I want to make significant redesigns. I want the app to adopt a dark theme, using come dark gray color as backgrounds for both the input and the result areas. Both areas should have rounded corners everywhere. Also, the result area should be cleared wherever the window is dismissed. I still need the input and result areas to be distictivly seperated, with the same transparent gap between the two.
+This all works, but I want to make some changes. When a result is received from the AI, it may be bigger than the result area. I want any and all elements in the result to fit: the text and images should not ever overflow and render the box scrollable horizontaly. Also, I do not want the app to have a set height, and rather for the program to take up as much height as needed.
 I want you to fully develop and implement this.
