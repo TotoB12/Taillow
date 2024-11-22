@@ -55,6 +55,12 @@ ipcRenderer.on('response', (event, chunk) => {
     responseDiv.classList.remove('images-only');
   }
 
+  if (responseDiv.innerHTML.trim().length === 0) {
+    responseDiv.classList.add('empty');
+  } else {
+    responseDiv.classList.remove('empty');
+  }
+
   const adjustHeight = () => {
     const inputAreaHeight = document.querySelector('.input-area').offsetHeight;
     const gapHeight = document.querySelector('.gap').offsetHeight;
@@ -90,6 +96,8 @@ ipcRenderer.on('response', (event, chunk) => {
 ipcRenderer.on('clear-response', () => {
   const responseDiv = document.getElementById('response');
   responseDiv.innerHTML = '';
+  responseDiv.classList.remove('images-only');
+  responseDiv.classList.add('empty');
 
   setTimeout(() => {
     const container = document.querySelector('.container');

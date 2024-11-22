@@ -74,17 +74,11 @@ body {
     border-radius: 12px;
 }
 
-.response-area:not(.images-only) p,
-.response-area:not(.images-only) h1,
-.response-area:not(.images-only) h2,
-.response-area:not(.images-only) h3,
-.response-area:not(.images-only) ul,
-.response-area:not(.images-only) ol,
-.response-area:not(.images-only) pre {
-    background: #1e1e1e;
-    border-radius: 12px;
-    padding: 15px;
+.response-area:not(.images-only):not(.empty) {
     margin: 0;
+    padding: 0px 15px;;
+    border-radius: 12px;
+    background: #1e1e1e;
 }
 
 .response-area pre {
