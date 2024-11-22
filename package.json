@@ -17,6 +17,9 @@
     "dotenv": "^16.4.5",
     "duckduckgo-images-api": "^1.0.5",
     "electron": "^33.0.1",
+    "katex": "^0.16.11",
+    "markdown-it": "^14.1.0",
+    "markdown-it-katex": "^2.0.3",
     "node-global-key-listener": "^0.3.0",
     "screenshot-desktop": "^1.15.0"
   }
