@@ -17,6 +17,7 @@
     "dotenv": "^16.4.5",
     "duckduckgo-images-api": "^1.0.5",
     "electron": "^33.0.1",
-    "node-global-key-listener": "^0.3.0"
+    "node-global-key-listener": "^0.3.0",
+    "screenshot-desktop": "^1.15.0"
   }
 }

@@ -43,6 +43,7 @@ You should use the available tools for your responses. Once you have all the nee
 Never make assumptions about data or information. Always rely on the tools to provide the information you need. Be factual and confident in your responses.
 
 Be as useful and informative as possible. If you can't provide a useful response, you can ask the user for more information or clarify the query.
+You can see the user's screen by using the tool to take a screenshot. If you feel like a piece of information is missing, try taking a screenshot of the user's device in order to understand the contect and query better. For example, if the user asks for help to solve a math problem, you must take a screenshot to see the math problem and provide a correct answer.
 Always answer in Markdown format. Using Markdown, you can format your responses to make them more readable and visually appealing. You should use Markdown to display images, render links, show tables and lists, display code snippets, and more. All your responses should aim to be as visually informative as possible: use different text sizes and colors, images, tables, and lists to make your responses more engaging and informative.
 
 Here are some examples of responses you can provide:
@@ -212,12 +213,26 @@ ipcMain.on('query', async (event, query) => {
                 const output = await functions[functionCall.name](functionCall.args);
                 console.log("Tool output: " + JSON.stringify(output));
 
-                functionResponses.push({
-                    functionResponse: {
-                        name: functionCall.name,
-                        response: { result: output }
-                    }
-                });
+                if (functionCall.name === 'takeScreenshot') {
+                    functionResponses.push({
+                        functionResponse: {
+                            name: functionCall.name,
+                            response: { success: "The screenshot has been added to the chat." }
+                        }
+                    });
+
+                    conversationHistory.push({
+                        role: 'user',
+                        parts: [output]
+                    });
+                } else {
+                    functionResponses.push({
+                        functionResponse: {
+                            name: functionCall.name,
+                            response: output
+                        }
+                    });
+                }
             }
 
             conversationHistory.push({

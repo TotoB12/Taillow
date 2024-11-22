@@ -79,6 +79,7 @@ body {
 .response-area:not(.images-only) h2,
 .response-area:not(.images-only) h3,
 .response-area:not(.images-only) ul,
+.response-area:not(.images-only) ol,
 .response-area:not(.images-only) pre {
     background: #1e1e1e;
     border-radius: 12px;

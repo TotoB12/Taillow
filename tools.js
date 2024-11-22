@@ -1,9 +1,20 @@
 const { image_search } = require("duckduckgo-images-api");
+const screenshot = require('screenshot-desktop');
+const fs = require("fs");
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+function base64ToGenerativePart(base64Data, mimeType) {
+    return {
+        inlineData: {
+            data: base64Data,
+            mimeType
+        },
+    };
+}
+
 function getDateAndTime() {
-    const date_and_time = new Date().toUTCString();
+    const date_and_time = new Date().toISOString();
     return { date_and_time: date_and_time };
 }
 
@@ -29,7 +40,7 @@ async function getImage(query) {
             retries: 2,
         });
         const images = results.slice(0, 4).map(result =>
-            `https://wsrv.nl/?url=${encodeURIComponent(result.image)}&w=350&h=350`
+            `https://wsrv.nl/?url=${encodeURIComponent(result.image)}&w=400&h=400`
             // result.image
         );
         return { images };
@@ -94,7 +105,17 @@ async function queryWolframAlpha(query) {
     }
 }
 
-// I want to add a new tool that can take a screenshot of my screen.
+async function takeScreenshot() {
+    try {
+        const img = await screenshot({ format: 'png' });
+        const base64Image = img.toString('base64');
+        const imagePart = base64ToGenerativePart(base64Image, 'image/png');
+        return imagePart;
+    } catch (error) {
+        console.error('Error taking screenshot:', error);
+        return { error: error.message };
+    }
+}
 
 const functions = {
     getDateAndTime: () => {
@@ -114,6 +135,9 @@ const functions = {
     },
     queryWolframAlpha: ({ query }) => {
         return queryWolframAlpha(query);
+    },
+    takeScreenshot: () => {
+        return takeScreenshot();
     },
 };
 
@@ -191,6 +215,10 @@ const tools = [
             },
             required: ["query"],
         },
+    },
+    {
+        name: "takeScreenshot",
+        description: "Take a screenshot of the user's screen. Use this to see the user's screen and get needed information",
     },
 ];
 
