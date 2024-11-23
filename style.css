@@ -100,20 +100,3 @@ body {
 .response-area::-webkit-scrollbar {
     display: none;
 }
-
-/* .response-area::-webkit-scrollbar {
-    width: 6px;
-}
-
-.response-area::-webkit-scrollbar-track {
-    background: #2e2e2e;
-}
-
-.response-area::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 3px;
-}
-
-.response-area::-webkit-scrollbar-thumb:hover {
-    background: #777;
-} */
