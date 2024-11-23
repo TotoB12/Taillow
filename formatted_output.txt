@@ -8,6 +8,7 @@ index.html
     <meta charset="UTF-8" />
     <title>Taillow</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous" />
   </head>
   <body>
     <div class="container">
@@ -17,11 +18,10 @@ index.html
       <div class="gap"></div>
       <div id="response" class="response-area empty"></div>
     </div>
-    <script src="marked.min.js"></script>
-    <script src="purify.min.js"></script>
     <script src="renderer.js"></script>
   </body>
 </html>
+
 ```
 
 main.js
@@ -73,8 +73,11 @@ You should use the available tools for your responses. Once you have all the nee
 Never make assumptions about data or information. Always rely on the tools to provide the information you need. Be factual and confident in your responses.
 
 Be as useful and informative as possible. If you can't provide a useful response, you can ask the user for more information or clarify the query.
-You can see the user's screen by using the tool to take a screenshot. If you feel like a piece of information is missing, try taking a screenshot of the user's device in order to understand the contect and query better. For example, if the user asks for help to solve a math problem, you must take a screenshot to see the math problem and provide a correct answer. Don't ever ask the user to provide or take a screenshot, you must do it yourself.
-Always answer in Markdown format. Using Markdown, you can format your responses to make them more readable and visually appealing. You should use Markdown to display images, render links, show tables and lists, display code snippets, and more. All your responses should aim to be as visually informative as possible: use different text sizes and colors, images, tables, and lists to make your responses more engaging and informative.
+You can see the user's screen by using the tool to take a screenshot. If you feel like a piece of information is missing, try taking a screenshot of the user's device in order to understand the contect and query better. For example, if the user asks for help to solve a math problem, you must take a screenshot to see the math problem and provide a correct answer. If you ever find yourself in a position to ask for clarification or more details, ensure you first take a screenshot to get the full context. Don't ever ask the user to provide or take a screenshot, you must do it yourself.
+
+Always answer in Markdown. Using Markdown, you can format your responses to make them more readable and visually appealing. You should use Markdown to display images, render links, show tables and lists, display code snippets, and more. All your responses should aim to be as visually informative as possible: use different text sizes and colors, images, tables, and lists to make your responses more engaging and informative (for example, display the media from the WolframAlpha results in the format: ![image](image_url)).
+Always format mathematical expressions using LaTeX syntax. Enclose inline math expressions in single dollar signs ($...$) and display math expressions in double dollar signs ($$...$$).
+Whenever you are to display an image, be sure to include the exclamatory mark before the square brackets, like so: ![image](image_url).
 
 Here are some examples of responses you can provide:
 
@@ -87,6 +90,7 @@ User: what is the weather in New York
 Assistant: ## New York
 **47°F** 🌧️
 Rain, fog, overcast
+![Weather](image_url)
 
 User: make me a picture of a cat
 
@@ -274,6 +278,7 @@ ipcMain.on('query', async (event, query) => {
             });
         }
 
+        console.log(response.response.text());
         event.sender.send('response', response.response.text());
     } catch (error) {
         console.error(error);
@@ -294,7 +299,19 @@ app.on('before-quit', () => {
 renderer.js
 ```javascript
 const { ipcRenderer } = require('electron');
+const marked = require('marked');
+const markedKatex = require('marked-katex-extension');
+const createDOMPurify = require('dompurify');
+const DOMPurify = createDOMPurify(window);
 
+// Configure marked to use the marked-katex-extension
+const options = {
+  throwOnError: false,
+  // Add any other KaTeX options if needed
+};
+marked.use(markedKatex(options));
+
+// Existing event listeners
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     ipcRenderer.send('hide-window');
@@ -317,10 +334,17 @@ inputField.addEventListener('keydown', (event) => {
 
 ipcRenderer.on('response', (event, chunk) => {
   const responseDiv = document.getElementById('response');
-  const sanitized = DOMPurify.sanitize(chunk);
-  const html = marked.parse(sanitized);
-  responseDiv.innerHTML = html;
-  
+  // First, parse the chunk with marked (including LaTeX rendering)
+  const html = marked.parse(chunk);
+  // Then, sanitize the resulting HTML
+  // Example configuration to allow KaTeX-specific elements and attributes
+  const sanitized = DOMPurify.sanitize(html, {
+    ADD_TAGS: ['span', 'math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub'],
+    ADD_ATTR: ['class', 'style', 'aria-hidden', 'focusable', 'role', 'tabindex', 'viewBox', 'xmlns', 'd'],
+  });
+
+  responseDiv.innerHTML = sanitized;
+
   function isImagesOnly(element) {
     const nodes = element.childNodes;
     for (let node of nodes) {
@@ -341,9 +365,9 @@ ipcRenderer.on('response', (event, chunk) => {
     }
     return true;
   }
-  
+
   const imagesOnly = isImagesOnly(responseDiv);
-  
+
   if (imagesOnly) {
     responseDiv.classList.add('images-only');
   } else {
@@ -623,7 +647,7 @@ async function performInternetSearch(query) {
 }
 
 async function queryWolframAlpha(query) {
-    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${process.env.WOLFRAMALPHA_KEY}&input=${encodeURIComponent(query)}`;
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${process.env.WOLFRAMALPHA_KEY}&units=metric&input=${encodeURIComponent(query)}`;
     console.log(url);
     try {
         const response = await fetch(url);
@@ -722,7 +746,7 @@ const tools = [
         name: "performInternetSearch",
         parameters: {
             type: "OBJECT",
-            description: "Perform a search on the internet. To use for general information and web results",
+            description: "Perform a search on the internet. To use for general information and web results, as a last resort",
             properties: {
                 query: {
                     type: "STRING",
@@ -736,7 +760,7 @@ const tools = [
         name: "queryWolframAlpha",
         parameters: {
             type: "OBJECT",
-            description: "Query Wolfram Alpha for information, math, statistics",
+            description: "Query Wolfram Alpha for information, math, statistics. To be used over the internet",
             properties: {
                 query: {
                     type: "STRING",
@@ -755,101 +779,125 @@ const tools = [
 module.exports = { functions, tools };
 ```
 
-This all works well, but I want to add a new feature. The AI responses are composed using Markdown, but also LaTeX. The Markdown looks great with the current implementation, but I now also want to have the LaTeX look good. I have found the following documentation for `marked-katex-extension`:
-
-```
-# marked-katex-extension
-
-Render [katex](https://katex.org/) code in marked
-
-```markdown
-This is inline katex: $c = \\pm\\sqrt{a^2 + b^2}$
-
-This is block level katex:
-
-$$
-c = \\pm\\sqrt{a^2 + b^2}
-$$
-```
-
-You will still need to include the css in your html document to allow katex styles.
+This all works well, but I want to change up the design of the program. I want to add a soft glow around the input area, and a soft glow around the inside of the response area. I have found the following demo online:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+<div class="card">Apple Intelligence</div>
+<div id="ring"></div>
 ```
 
-# Usage
+```css
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: true;
+}
 
-```js
-import {marked} from "marked";
-import markedKatex from "marked-katex-extension";
+:root {
+  --d: 16px;
+  --angle: 0deg;
+  --gradient-shadow: conic-gradient(
+    from var(--angle) at center,
+    #8c1a74,
+    #732695,
+    #563eb3,
+    #4259d2,
+    #3a75f2,
+    #563eb3,
+    #732695
+  );
+}
 
-// or in the browser
-// <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@{version}/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
-// <script defer src="https://cdn.jsdelivr.net/npm/katex@{version}/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-// <script src="https://cdn.jsdelivr.net/npm/marked@{version}/lib/marked.umd.js"></script>
-// <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension@{version}/lib/index.umd.js"></script>
+body {
+  margin: 0;
+  padding: 0;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-const options = {
-  throwOnError: false
-};
+#blob {
+  position: relative;
+  width: 100px;
+  height: 20px;
+  background: linea;
 
-marked.use(markedKatex(options));
+  z-index: 1;
+  filter: blur(20px);
+}
 
-marked.parse("katex: $c = \\pm\\sqrt{a^2 + b^2}$");
+#blobwrap {
+  position: absolute;
+  mask-image: url("data:image/svg+xml,%3Csvg width='538' height='171' viewBox='0 0 538 171' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cellipse cx='269' cy='85.5' rx='269' ry='85.5' fill='%23D9D9D9'/%3E%3C/svg%3E%0A");
+  filter: drop-shadow(16px 16px 20px blue);
+  mask-repeat: no-repeat;
+  background: linear-gradient(
+    to right,
+    #8c1a74,
+    #732695,
+    #563eb3,
+    #4259d2,
+    #3a75f2,
+    #563eb3,
+    #732695
+  );
+  top: 100px;
+  left: 100px;
+  right: 0px;
+  height: 10px;
+  filter: blur(2px);
+}
+
+#ring {
+  position: fixed;
+  inset: calc(var(--d) / -2);
+  border: var(--d) solid;
+  border-image: var(--gradient-shadow) 10;
+  pointer-events: none;
+  filter: blur(12px);
+}
+
+.card {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  color: #fff;
+  text-align: center;
+  font-size: 36px;
+  font-family: serif;
+  width: 400px;
+  height: 250px;
+  background: linear-gradient(to top, #000, #222);
+}
+
+.card:before,
+.card:after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: var(--gradient-shadow);
+  z-index: -1;
+}
+
+.card:after {
+  inset: calc(var(--d) / -2);
+  filter: blur(20px);
+}
 ```
 
-![image](https://user-images.githubusercontent.com/97994/188899567-e6e8268c-209e-4067-8f44-0ada16caacdd.png)
+```javascript
+const root = document.documentElement;
+const speed = 1.5;
 
-## Block level
-
-You can include newlines in block level katex. Block level katex must contain starting and ending delimiters on their own line.
-
-```js
-marked.parse(`
-$$
-\\begin{array}{cc}
-   a & b \\\\
-   c & d
-\\end{array}
-$$
-`);
+let angle = 0;
+(function swirl() {
+  root.style.setProperty("--angle", `${(angle = (angle + speed) % 360)}deg`);
+  requestAnimationFrame(swirl);
+})();
 ```
 
-## DisplayMode
-
-[`displayMode`](https://katex.org/docs/options.html) will be on by default when using two dollar signs (`$$`) in inline or block katex. And it will be off by default for a single dollar sign (`$`) in inline or block katex.
-
-## Non Standard
-
-If you want to be able to parse mathematical formulas in non-standard markdown format, that is, without spaces before and after $ or $$, you can turn on the nonStandard option.
-
-```js
-import {marked} from "marked";
-import markedKatex from "marked-katex-extension";
-
-const options = {
-  nonStandard: true
-};
-
-marked.use(markedKatex(options));
-
-marked.parse(`
-afdaf$x=x^2$4$x=x^2$
-
-$$
-x = x^2
-$$
-`);
-```
-
-![image](https://private-user-images.githubusercontent.com/14917591/353790887-22238ca5-4a83-487d-912e-95eb10643b34.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MjI0Nzg0NjEsIm5iZiI6MTcyMjQ3ODE2MSwicGF0aCI6Ii8xNDkxNzU5MS8zNTM3OTA4ODctMjIyMzhjYTUtNGE4My00ODdkLTkxMmUtOTVlYjEwNjQzYjM0LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDA4MDElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQwODAxVDAyMDkyMVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWJkYjhkM2EwNzFiNGRmMTQ0M2QwN2FhN2NlNjhjZDI2ZTY4YmY0OWFjN2JlOGE3MzY3ZmQ5ZTdlYmMwNzliNjYmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.EEIyMrF2xQXTRAnM3HrTIIPjdwtCGrQ2M9LoFyKHAww)
-
-## `options`
-
-Options are sent directly to [`katex`](https://katex.org/docs/options.html)
-```
-
-I want you to fully develop and implement this.
-
-This all works well, but I have an issue. When the keybind is pressed (double control) and the program is opened, it isnt properly selected/focused: the window does show up on my screen, with the input field selected, but the window itself is not the selected program on my computer. I need this to be fixed. Is the window being reopened/generated every time? Should it be? What would be the best design? I want you to fully develop and implement a fix.
+I want to have the look of the card on my input area, and the look of the ring on the response area. I want you to fully develop and implement this.
