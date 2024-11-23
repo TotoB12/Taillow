@@ -1,5 +1,17 @@
 const { ipcRenderer } = require('electron');
+const marked = require('marked');
+const markedKatex = require('marked-katex-extension');
+const createDOMPurify = require('dompurify');
+const DOMPurify = createDOMPurify(window);
 
+// Configure marked to use the marked-katex-extension
+const options = {
+  throwOnError: false,
+  // Add any other KaTeX options if needed
+};
+marked.use(markedKatex(options));
+
+// Existing event listeners
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     ipcRenderer.send('hide-window');
@@ -22,10 +34,17 @@ inputField.addEventListener('keydown', (event) => {
 
 ipcRenderer.on('response', (event, chunk) => {
   const responseDiv = document.getElementById('response');
-  const sanitized = DOMPurify.sanitize(chunk);
-  const html = marked.parse(sanitized);
-  responseDiv.innerHTML = html;
-  
+  // First, parse the chunk with marked (including LaTeX rendering)
+  const html = marked.parse(chunk);
+  // Then, sanitize the resulting HTML
+  // Example configuration to allow KaTeX-specific elements and attributes
+  const sanitized = DOMPurify.sanitize(html, {
+    ADD_TAGS: ['span', 'math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub'],
+    ADD_ATTR: ['class', 'style', 'aria-hidden', 'focusable', 'role', 'tabindex', 'viewBox', 'xmlns', 'd'],
+  });
+
+  responseDiv.innerHTML = sanitized;
+
   function isImagesOnly(element) {
     const nodes = element.childNodes;
     for (let node of nodes) {
@@ -46,9 +65,9 @@ ipcRenderer.on('response', (event, chunk) => {
     }
     return true;
   }
-  
+
   const imagesOnly = isImagesOnly(responseDiv);
-  
+
   if (imagesOnly) {
     responseDiv.classList.add('images-only');
   } else {
