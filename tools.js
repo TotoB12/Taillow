@@ -192,7 +192,7 @@ const tools = [
         name: "performInternetSearch",
         parameters: {
             type: "OBJECT",
-            description: "Perform a search on the internet. To use for general information and web results",
+            description: "Perform a search on the internet. To use for general information and web results, as a last resort",
             properties: {
                 query: {
                     type: "STRING",
@@ -206,7 +206,7 @@ const tools = [
         name: "queryWolframAlpha",
         parameters: {
             type: "OBJECT",
-            description: "Query Wolfram Alpha for information, math, statistics",
+            description: "Query Wolfram Alpha for information, math, statistics. To be used over the internet",
             properties: {
                 query: {
                     type: "STRING",

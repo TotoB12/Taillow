@@ -45,9 +45,11 @@ You should use the available tools for your responses. Once you have all the nee
 Never make assumptions about data or information. Always rely on the tools to provide the information you need. Be factual and confident in your responses.
 
 Be as useful and informative as possible. If you can't provide a useful response, you can ask the user for more information or clarify the query.
-You can see the user's screen by using the tool to take a screenshot. If you feel like a piece of information is missing, try taking a screenshot of the user's device in order to understand the contect and query better. For example, if the user asks for help to solve a math problem, you must take a screenshot to see the math problem and provide a correct answer. Don't ever ask the user to provide or take a screenshot, you must do it yourself.
-Always answer in Markdown format. Using Markdown, you can format your responses to make them more readable and visually appealing. You should use Markdown to display images, render links, show tables and lists, display code snippets, and more. All your responses should aim to be as visually informative as possible: use different text sizes and colors, images, tables, and lists to make your responses more engaging and informative.
+You can see the user's screen by using the tool to take a screenshot. If you feel like a piece of information is missing, try taking a screenshot of the user's device in order to understand the contect and query better. For example, if the user asks for help to solve a math problem, you must take a screenshot to see the math problem and provide a correct answer. If you ever find yourself in a position to ask for clarification or more details, ensure you first take a screenshot to get the full context. Don't ever ask the user to provide or take a screenshot, you must do it yourself.
+
+Always answer in Markdown. Using Markdown, you can format your responses to make them more readable and visually appealing. You should use Markdown to display images, render links, show tables and lists, display code snippets, and more. All your responses should aim to be as visually informative as possible: use different text sizes and colors, images, tables, and lists to make your responses more engaging and informative (for example, display the media from the WolframAlpha results in the format: ![image](image_url)).
 Always format mathematical expressions using LaTeX syntax. Enclose inline math expressions in single dollar signs ($...$) and display math expressions in double dollar signs ($$...$$).
+Whenever you are to display an image, be sure to include the exclamatory mark before the square brackets, like so: ![image](image_url).
 
 Here are some examples of responses you can provide:
 
@@ -60,6 +62,7 @@ User: what is the weather in New York
 Assistant: ## New York
 **47°F** 🌧️
 Rain, fog, overcast
+![Weather](image_url)
 
 User: make me a picture of a cat
 
@@ -247,6 +250,7 @@ ipcMain.on('query', async (event, query) => {
             });
         }
 
+        console.log(response.response.text());
         event.sender.send('response', response.response.text());
     } catch (error) {
         console.error(error);
