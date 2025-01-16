@@ -9,6 +9,21 @@ const options = {
 };
 marked.use(markedKatex(options));
 
+// A small helper so we can recalc window height whenever we want
+function adjustWindowHeight() {
+  const inputAreaHeight = document.querySelector('.input-area').offsetHeight;
+  const gapHeight = document.querySelector('.gap').offsetHeight;
+
+  // We have both #response and #quick-math-response now
+  const responseAreaHeight = document.getElementById('response').scrollHeight;
+  const quickMathAreaHeight = document.getElementById('quick-math-response').scrollHeight;
+
+  // Add some bottom padding
+  const totalHeight = inputAreaHeight + gapHeight + responseAreaHeight + quickMathAreaHeight + 22;
+
+  ipcRenderer.send('adjust-window-height', totalHeight);
+}
+
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     ipcRenderer.send('hide-window');
@@ -16,19 +31,60 @@ document.addEventListener('keydown', (event) => {
 });
 
 const inputField = document.querySelector('input');
+
+// 1) Existing 'Enter' logic for sending to AI
 inputField.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
     const query = event.target.value.trim();
     if (query) {
+      // Send to main.js
       ipcRenderer.send('query', query);
       event.target.value = '';
 
+      // Clear any previous AI response
       const responseDiv = document.getElementById('response');
       responseDiv.innerHTML = '';
     }
   }
 });
 
+// 2) NEW: Listen to every keystroke ('input') to do quick math
+inputField.addEventListener('input', (event) => {
+  const expression = event.target.value.trim();
+  const quickMathDiv = document.getElementById('quick-math-response');
+
+  if (!expression) {
+    // If empty, clear quick math
+    quickMathDiv.innerHTML = '';
+    quickMathDiv.classList.add('empty');
+    adjustWindowHeight();
+    return;
+  }
+
+  try {
+    const result = math.evaluate(expression);
+
+    // If we do get a valid result, show it
+    if (typeof result === 'number' || typeof result === 'boolean') {
+      quickMathDiv.innerHTML = `<p>${result}</p>`;
+      quickMathDiv.classList.remove('empty');
+      quickMathDiv.classList.remove('images-only');
+    } else {
+      // If result is somehow empty
+      quickMathDiv.innerHTML = '';
+      quickMathDiv.classList.add('empty');
+    }
+  } catch (err) {
+    // Any math parsing error => clear the quick math
+    quickMathDiv.innerHTML = '';
+    quickMathDiv.classList.add('empty');
+  }
+
+  // Recalc the window size
+  adjustWindowHeight();
+});
+
+// --- Existing AI response listener ---
 ipcRenderer.on('response', (event, chunk) => {
   const responseDiv = document.getElementById('response');
   const html = marked.parse(chunk);
@@ -74,15 +130,9 @@ ipcRenderer.on('response', (event, chunk) => {
     responseDiv.classList.remove('empty');
   }
 
-  const adjustHeight = () => {
-    const inputAreaHeight = document.querySelector('.input-area').offsetHeight;
-    const gapHeight = document.querySelector('.gap').offsetHeight;
-    const responseAreaHeight = document.querySelector('.response-area').scrollHeight;
-
-    const totalHeight = inputAreaHeight + gapHeight + responseAreaHeight + 22;
-
-    ipcRenderer.send('adjust-window-height', totalHeight);
-  };
+  // Now that the response is set, adjust window size
+  // But also account for quick math
+  adjustWindowHeight();
 
   const images = responseDiv.getElementsByTagName('img');
   if (images.length > 0) {
@@ -91,18 +141,18 @@ ipcRenderer.on('response', (event, chunk) => {
       img.addEventListener('load', () => {
         imagesLoaded++;
         if (imagesLoaded === images.length) {
-          adjustHeight();
+          adjustWindowHeight();
         }
       });
       img.addEventListener('error', () => {
         imagesLoaded++;
         if (imagesLoaded === images.length) {
-          adjustHeight();
+          adjustWindowHeight();
         }
       });
     }
   } else {
-    adjustHeight();
+    adjustWindowHeight();
   }
 });
 
@@ -111,6 +161,11 @@ ipcRenderer.on('clear-response', () => {
   responseDiv.innerHTML = '';
   responseDiv.classList.remove('images-only');
   responseDiv.classList.add('empty');
+
+  // Also clear the quick math
+  const quickMathDiv = document.getElementById('quick-math-response');
+  quickMathDiv.innerHTML = '';
+  quickMathDiv.classList.add('empty');
 
   setTimeout(() => {
     const container = document.querySelector('.container');
