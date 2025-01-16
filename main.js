@@ -54,18 +54,15 @@ Whenever you are to display an image, be sure to include the exclamatory mark be
 Here are some examples of responses you can provide:
 
 User: what time is it
-
 Assistant: ## 12:00 PM
 
 User: what is the weather in New York
-
 Assistant: ## New York
 **47°F** 🌧️
 Rain, fog, overcast
 ![Weather](image_url)
 
 User: make me a picture of a cat
-
 Assistant: ![Cat](image_url)
 `;
 
