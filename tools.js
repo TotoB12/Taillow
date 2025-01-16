@@ -31,69 +31,62 @@ async function getWeather(location) {
         });
 }
 
-async function getImage(query) {
+async function generateImage(query) {
+    query = btoa(query);
+    const url = `https://api.totob12.com/generate-image?prompt=${encodeURIComponent(query)}`;
     try {
-        const results = await image_search({
-            query: query,
-            moderate: false,
-            iterations: 1,
-            retries: 2,
-        });
-        const images = results.slice(0, 4).map(result =>
-            `https://wsrv.nl/?url=${encodeURIComponent(result.image)}&w=400&h=400`
-            // result.image
-        );
-        return { images };
+        const response = await fetch(url);
+        const data = await response.json();
+        return { image: data.result };
     } catch (error) {
         console.error(error);
-        return { images: [] };
+        return { error: error.message };
     }
 }
 
-async function generateImage(query) {
-    const imageUrl = `https://fast-flux-demo.replicate.workers.dev/api/generate-image?text=${encodeURIComponent(query)}`;
-    return { generatedImageUrl: imageUrl };
-}
-
-async function performInternetSearch(query) {
+async function searchInternet(query) {
+    query = btoa(query);
+    const url = `https://api.totob12.com/search/search?q=${encodeURIComponent(query)}`;
     try {
-        const headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        };
-
-        const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-        const response = await axios.get(url, { headers });
-
-        if (response.status !== 200) {
-            throw new Error(`HTTP error ${response.status}`);
-        }
-
-        const $ = cheerio.load(response.data);
-        const webResults = [];
-        $('div.result.results_links.results_links_deep.web-result').each((i, elem) => {
-            const title = $(elem).find('h2.result__title a.result__a').text().trim();
-            const url = $(elem).find('h2.result__title a.result__a').attr('href');
-            const description = $(elem).find('a.result__snippet').text().trim();
-            const favicon = $(elem).find('img.result__icon__img').attr('src') || '';
-
-            if (!$(elem).find('.badge--ad').length) {
-                webResults.push({ title, url, description, favicon });
-            }
-        });
-
-        const limitedWebResults = webResults.slice(0, 10);
-
-        return { webResults: limitedWebResults };
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error(error);
-        return { webResults: error };
+        return { error: error.message };
+    }
+}
+
+async function lookWebpage(link) {
+    link = btoa(link);
+    const url = `https://api.totob12.com/search/webpage?url=${encodeURIComponent(link)}`;
+    try {
+        const response = await fetch(url);
+        let data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(error);
+        return { error: error.message };
+    }
+}
+
+async function searchImages(query) {
+    query = btoa(query);
+    const url = `https://api.totob12.com/search/images?q=${encodeURIComponent(query)}`;
+    try {
+        const response = await fetch(url);
+        let data = await response.json();
+        data.images = data.images.slice(0, 7);
+        return { images_to_display: data };
+    } catch (error) {
+        console.error(error);
+        return { error: error.message };
     }
 }
 
 async function queryWolframAlpha(query) {
-    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${process.env.WOLFRAMALPHA_KEY}&units=metric&input=${encodeURIComponent(query)}`;
+    query = btoa(query);
+    const url = `https://api.totob12.com/wolframalpha?query=${encodeURIComponent(query)}`;
     console.log(url);
     try {
         const response = await fetch(url);
@@ -124,14 +117,17 @@ const functions = {
     getWeather: ({ location }) => {
         return getWeather(location);
     },
-    getImage: ({ query }) => {
-        return getImage(query);
+    searchInternet: ({ query }) => {
+        return searchInternet(query);
+    },
+    lookWebpage: ({ link }) => {
+        return lookWebpage(link);
+    },
+    searchImages: ({ query }) => {
+        return searchImages(query);
     },
     generateImage: ({ query }) => {
         return generateImage(query);
-    },
-    performInternetSearch: ({ query }) => {
-        return performInternetSearch(query);
     },
     queryWolframAlpha: ({ query }) => {
         return queryWolframAlpha(query);
@@ -161,14 +157,42 @@ const tools = [
         },
     },
     {
-        name: "getImage",
+        name: "searchInternet",
         parameters: {
             type: "OBJECT",
-            description: "Search for images on the web",
+            description: "Search the internet for information",
             properties: {
                 query: {
                     type: "STRING",
-                    description: "The search query for the images",
+                    description: "The query to search the internet for",
+                },
+            },
+            required: ["query"],
+        },
+    },
+    {
+        name: "lookWebpage",
+        parameters: {
+            type: "OBJECT",
+            description: "Look up a webpage; gets you the text content of the webpage",
+            properties: {
+                link: {
+                    type: "STRING",
+                    description: "The URL of the webpage to look up",
+                },
+            },
+            required: ["link"],
+        },
+    },
+    {
+        name: "searchImages",
+        parameters: {
+            type: "OBJECT",
+            description: "Search the internet for images",
+            properties: {
+                query: {
+                    type: "STRING",
+                    description: "The query to search the internet for images",
                 },
             },
             required: ["query"],
@@ -178,25 +202,11 @@ const tools = [
         name: "generateImage",
         parameters: {
             type: "OBJECT",
-            description: "Generate an image with the given text using AI",
+            description: "Generate and create an image with the given text",
             properties: {
                 query: {
                     type: "STRING",
                     description: "The text to generate the image with",
-                },
-            },
-            required: ["query"],
-        },
-    },
-    {
-        name: "performInternetSearch",
-        parameters: {
-            type: "OBJECT",
-            description: "Perform a search on the internet. To use for general information and web results, as a last resort",
-            properties: {
-                query: {
-                    type: "STRING",
-                    description: "The search query for the internet search",
                 },
             },
             required: ["query"],
