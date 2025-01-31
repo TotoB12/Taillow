@@ -32,7 +32,7 @@ document.addEventListener('keydown', (event) => {
 
 const inputField = document.querySelector('input');
 
-// 1) Existing 'Enter' logic for sending to AI
+// 1) 'Enter' logic for sending to AI
 inputField.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
     const query = event.target.value.trim();
@@ -44,11 +44,20 @@ inputField.addEventListener('keydown', (event) => {
       // Clear any previous AI response
       const responseDiv = document.getElementById('response');
       responseDiv.innerHTML = '';
+
+      // --- FIX: Clear the quick math area on Enter so you don't see both ---
+      const quickMathDiv = document.getElementById('quick-math-response');
+      quickMathDiv.innerHTML = '';
+      quickMathDiv.classList.add('empty');
+      // ---------------------------------------------------------------------
+
+      // Optionally resize after clearing
+      adjustWindowHeight();
     }
   }
 });
 
-// 2) NEW: Listen to every keystroke ('input') to do quick math
+// 2) Quick math preview on every keystroke
 inputField.addEventListener('input', (event) => {
   const expression = event.target.value.trim();
   const quickMathDiv = document.getElementById('quick-math-response');
@@ -84,7 +93,7 @@ inputField.addEventListener('input', (event) => {
   adjustWindowHeight();
 });
 
-// --- Existing AI response listener ---
+// --- AI response listener ---
 ipcRenderer.on('response', (event, chunk) => {
   const responseDiv = document.getElementById('response');
   const html = marked.parse(chunk);
@@ -131,7 +140,6 @@ ipcRenderer.on('response', (event, chunk) => {
   }
 
   // Now that the response is set, adjust window size
-  // But also account for quick math
   adjustWindowHeight();
 
   const images = responseDiv.getElementsByTagName('img');
@@ -156,13 +164,13 @@ ipcRenderer.on('response', (event, chunk) => {
   }
 });
 
+// Clear both response areas if the window is hidden
 ipcRenderer.on('clear-response', () => {
   const responseDiv = document.getElementById('response');
   responseDiv.innerHTML = '';
   responseDiv.classList.remove('images-only');
   responseDiv.classList.add('empty');
 
-  // Also clear the quick math
   const quickMathDiv = document.getElementById('quick-math-response');
   quickMathDiv.innerHTML = '';
   quickMathDiv.classList.add('empty');
