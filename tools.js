@@ -1,14 +1,15 @@
+const path = require("path");
 const { image_search } = require("duckduckgo-images-api");
-const screenshot = require('screenshot-desktop');
+const screenshot = require("screenshot-desktop");
 const fs = require("fs");
-const axios = require('axios');
-const cheerio = require('cheerio');
+const axios = require("axios");
+const cheerio = require("cheerio");
 
 function base64ToGenerativePart(base64Data, mimeType) {
     return {
         inlineData: {
             data: base64Data,
-            mimeType
+            mimeType,
         },
     };
 }
@@ -21,11 +22,11 @@ function getDateAndTime() {
 async function getWeather(location) {
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${process.env.WEATHER_KEY}&units=metric`;
     return fetch(url)
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
             return { weather: data };
         })
-        .catch(error => {
+        .catch((error) => {
             console.error(error);
             return { error: error };
         });
@@ -93,26 +94,59 @@ async function queryWolframAlpha(query) {
         const data = await response.text();
         return { response: data };
     } catch (error) {
-        console.error('Error querying Wolfram Alpha:', error);
+        console.error("Error querying Wolfram Alpha:", error);
         return { error: error };
     }
 }
 
 async function takeScreenshot() {
     try {
-        const img = await screenshot({ format: 'png' });
-        const base64Image = img.toString('base64');
-        const imagePart = base64ToGenerativePart(base64Image, 'image/png');
+        const img = await screenshot({ format: "png" });
+        const base64Image = img.toString("base64");
+        const imagePart = base64ToGenerativePart(base64Image, "image/png");
         return imagePart;
     } catch (error) {
-        console.error('Error taking screenshot:', error);
+        console.error("Error taking screenshot:", error);
         return { error: error.message };
     }
 }
 
+async function getRandomPicture() {
+    const directoryPath = "C:/a/tmp";
+
+    try {
+        const files = fs.readdirSync(directoryPath);
+
+        // Filter only known image extensions
+        const allowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+        const imageFiles = files.filter((file) => {
+            const ext = path.extname(file).toLowerCase();
+            return allowedExtensions.includes(ext);
+        });
+
+        if (imageFiles.length === 0) {
+            return { error: "No images found in the specified directory." };
+        }
+
+        // Pick a random index
+        const randomIndex = Math.floor(Math.random() * imageFiles.length);
+        const chosenFile = imageFiles[randomIndex];
+
+        // Create absolute path
+        const absolutePath = path.join(directoryPath, chosenFile);
+
+        // Return an object with a "path" (or any key you like)
+        return { path: absolutePath };
+    } catch (error) {
+        console.error("Error in getRandomPicture:", error);
+        return { error: error.message };
+    }
+}
+
+
 const functions = {
     getDateAndTime: () => {
-        return getDateAndTime()
+        return getDateAndTime();
     },
     getWeather: ({ location }) => {
         return getWeather(location);
@@ -135,6 +169,9 @@ const functions = {
     takeScreenshot: () => {
         return takeScreenshot();
     },
+    getRandomPicture: () => {
+        return getRandomPicture();
+    },
 };
 
 const tools = [
@@ -150,7 +187,7 @@ const tools = [
             properties: {
                 location: {
                     type: "STRING",
-                    description: "The precise location/city to get the weather for, in the simplest format possible (e.g. 'washington dc', 'paris'). Do not use commas or other special characters.",
+                    description: "The precise location/city to get the weather for, in the simplest format possible (e.g. 'washington dc', 'paris').",
                 },
             },
             required: ["location"],
@@ -229,6 +266,10 @@ const tools = [
     {
         name: "takeScreenshot",
         description: "Take a screenshot of the user's screen. Use this to see the user's screen and get needed information",
+    },
+    {
+        name: "getRandomPicture",
+        description: "Return a random local picture's path from my local pictures.",
     },
 ];
 

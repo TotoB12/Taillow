@@ -100,6 +100,7 @@ ipcRenderer.on('response', (event, chunk) => {
   const sanitized = DOMPurify.sanitize(html, {
     ADD_TAGS: ['span', 'math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub'],
     ADD_ATTR: ['class', 'style', 'aria-hidden', 'focusable', 'role', 'tabindex', 'viewBox', 'xmlns', 'd'],
+    ALLOW_UNKNOWN_PROTOCOLS: true
   });
 
   responseDiv.innerHTML = sanitized;

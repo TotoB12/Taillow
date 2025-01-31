@@ -68,6 +68,9 @@ Rain, fog, overcast
 
 User: make me a picture of a cat
 Assistant: ![Cat](image_url)
+
+User: show me one of my pictures
+Assistant: ![randomimage](file:///C:/Users/Name/Pictures/selected_picture.jpg)
 `;
 
 let mainWindow;
