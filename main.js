@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, screen, globalShortcut } = require('electron');
 const path = require('path');
 const { GlobalKeyboardListener } = require('node-global-key-listener');
 const axios = require('axios');
@@ -67,11 +67,7 @@ Rain, fog, overcast
 ![Weather](image_url)
 
 User: make me a picture of a cat
-Assistant: ![Cat](image_url)
-
-User: show me one of my pictures
-Assistant: ![randomimage](file:///C:/Users/Name/Pictures/selected_picture.jpg)
-`;
+Assistant: ![Cat](image_url)`;
 
 let mainWindow;
 let tray;

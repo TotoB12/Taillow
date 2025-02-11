@@ -169,9 +169,9 @@ const functions = {
     takeScreenshot: () => {
         return takeScreenshot();
     },
-    getRandomPicture: () => {
-        return getRandomPicture();
-    },
+    // getRandomPicture: () => {
+    //     return getRandomPicture();
+    // },
 };
 
 const tools = [
@@ -267,10 +267,10 @@ const tools = [
         name: "takeScreenshot",
         description: "Take a screenshot of the user's screen. Use this to see the user's screen and get needed information",
     },
-    {
-        name: "getRandomPicture",
-        description: "Return a random local picture's path from my local pictures.",
-    },
+    // {
+    //     name: "getRandomPicture",
+    //     description: "Return a random local picture's path from my local pictures.",
+    // },
 ];
 
 module.exports = { functions, tools };
