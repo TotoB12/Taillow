@@ -112,7 +112,7 @@ async function takeScreenshot() {
 }
 
 async function getRandomPicture() {
-    const directoryPath = "C:/a/tmp";
+    const directoryPath = "C:/a/personal/tmp";
 
     try {
         const files = fs.readdirSync(directoryPath);
@@ -136,7 +136,7 @@ async function getRandomPicture() {
         const absolutePath = path.join(directoryPath, chosenFile);
 
         // Return an object with a "path" (or any key you like)
-        return { path: absolutePath };
+        return { path: absolutePath.replace(/\\/g, "/") };
     } catch (error) {
         console.error("Error in getRandomPicture:", error);
         return { error: error.message };
@@ -169,9 +169,9 @@ const functions = {
     takeScreenshot: () => {
         return takeScreenshot();
     },
-    // getRandomPicture: () => {
-    //     return getRandomPicture();
-    // },
+    getRandomPicture: () => {
+        return getRandomPicture();
+    },
 };
 
 const tools = [
@@ -267,10 +267,10 @@ const tools = [
         name: "takeScreenshot",
         description: "Take a screenshot of the user's screen. Use this to see the user's screen and get needed information",
     },
-    // {
-    //     name: "getRandomPicture",
-    //     description: "Return a random local picture's path from my local pictures.",
-    // },
+    {
+        name: "getRandomPicture",
+        description: "Return a random local picture's path from my local pictures.",
+    },
 ];
 
 module.exports = { functions, tools };
